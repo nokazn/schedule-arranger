@@ -21,7 +21,6 @@ if (result.error) {
   throw result.error;
 }
 
-
 // Init Jasmine
 const jasmine = new Jasmine(null);
 
@@ -29,9 +28,7 @@ const jasmine = new Jasmine(null);
 jasmine.loadConfig({
   random: true,
   spec_dir: 'spec',
-  spec_files: [
-    './tests/**/*.spec.ts',
-  ],
+  spec_files: ['./tests/**/*.spec.ts'],
   stopSpecOnExpectationFailure: false,
 });
 
@@ -47,7 +44,7 @@ jasmine.onComplete((passed: boolean) => {
 // Run all or a single unit-test
 if (options.testFile) {
   const testFile = options.testFile as string;
-  find.file(`${testFile  }.spec.ts`, './spec', (files) => {
+  find.file(`${testFile}.spec.ts`, './spec', (files) => {
     if (files.length === 1) {
       jasmine.specFiles = [files[0]];
       jasmine.execute();
