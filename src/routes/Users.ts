@@ -15,12 +15,13 @@ const { BAD_REQUEST, CREATED, OK } = StatusCodes;
  ***************************************************************************** */
 
 router.get('/all', (req: Request, res: Response) => {
-  userDao.getAll()
+  userDao
+    .getAll()
     .then((users) => {
-      res.status(OK).json({ users })
+      res.status(OK).json({ users });
     })
     .catch((err) => {
-      logger.error(err)
+      logger.error(err);
     });
 });
 
@@ -34,12 +35,14 @@ router.post('/add', (req: IRequest, res: Response) => {
     res.status(BAD_REQUEST).json({
       error: paramMissingError,
     });
-    return
+    return;
   }
-  userDao.add(user)
+  userDao
+    .add(user)
     .then(() => {
       res.status(CREATED).end();
-    }).catch((err) => {
+    })
+    .catch((err) => {
       logger.error(err);
     });
 });
@@ -57,7 +60,8 @@ router.put('/update', (req: IRequest, res: Response) => {
     return;
   }
   user.id = Number(user.id);
-  userDao.update(user)
+  userDao
+    .update(user)
     .then(() => {
       res.status(OK).end();
     })
@@ -72,7 +76,8 @@ router.put('/update', (req: IRequest, res: Response) => {
 
 router.delete('/delete/:id', (req: IRequest, res: Response) => {
   const { id } = req.params;
-  userDao.delete(Number(id))
+  userDao
+    .delete(Number(id))
     .then(() => {
       res.status(OK).end();
     })
