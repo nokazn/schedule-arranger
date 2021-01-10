@@ -3,15 +3,11 @@
  */
 
 import fs from 'fs-extra';
-import Logger from 'jet-logger';
+import log4js from 'log4js';
 import childProcess from 'child_process';
 
 // Setup logger
-const logger = new Logger();
-logger.timestamp = false;
-
-
-
+const logger = log4js.getLogger();
 
 (async () => {
     try {
@@ -21,11 +17,11 @@ logger.timestamp = false;
         await copy('./src/public', './dist/public');
         await copy('./src/views', './dist/views');
         // Copy production env file
-        await copy('./src/pre-start/env/production.env', './dist/pre-start/env/production.env');
+        await copy('./src/pre-start/env/.env.production', './dist/pre-start/env/.env.production');
         // Copy back-end files
         await exec('tsc --build tsconfig.prod.json', './')
     } catch (err) {
-        logger.err(err);
+        logger.error(err);
     }
 })();
 

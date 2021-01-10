@@ -8,9 +8,10 @@
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
     "tsc": "tsc -p ./tsconfig.json --noEmit",
+    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
+    "dev:watch": "ts-node-dev -r tsconfig-paths/register --respawn src/index.ts",
     "build": "ts-node build.ts",
-    "start": "node -r module-alias/register ./dist --env=production",
-    "start:dev": "nodemon",
+    "start": "yarn build && node -r module-alias/register ./dist/index.js --env production",
     "test": "nodemon --config ./spec/nodemon.json"
   },
   "nodemonConfig": {
@@ -24,15 +25,8 @@
     "exec": "ts-node -r tsconfig-paths/register ./src"
   },
   "_moduleAliases": {
-    "@daos": "dist/daos",
-    "@entities": "dist/entities",
-    "@shared": "dist/shared",
-    "@server": "dist/Server"
+    "~": "dist"
   },
-  "eslintIgnore": [
-    "src/public/",
-    "build.ts"
-  ],
   "dependencies": {
     "command-line-args": "^5.1.1",
     "cookie-parser": "^1.4.5",
@@ -41,8 +35,8 @@
     "express-async-errors": "^3.1.1",
     "helmet": "^4.3.1",
     "http-status-codes": "^2.1.4",
-    "jet-logger": "^1.0.4",
     "jsonfile": "^6.1.0",
+    "log4js": "^6.3.0",
     "module-alias": "^2.2.2",
     "morgan": "^1.10.0"
   },
@@ -70,6 +64,7 @@
     "prettier": "^2.2.1",
     "supertest": "^6.0.1",
     "ts-node": "^9.1.1",
+    "ts-node-dev": "^1.1.1",
     "tsconfig-paths": "^3.9.0",
     "typescript": "^4.1.3"
   }

@@ -7,7 +7,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
 
-import logger from '@shared/Logger';
+import logger from '~/shared/logger';
 import BaseRouter from './routes';
 
 const app = express();
@@ -28,6 +28,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Security
 if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('short'));
   app.use(helmet());
 }
 
@@ -37,7 +38,7 @@ app.use('/api', BaseRouter);
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  logger.err(err, true);
+  logger.error(err, true);
   return res.status(BAD_REQUEST).json({
     error: err.message,
   });

@@ -1,17 +1,14 @@
-import { IUser } from '@entities/User';
-import { getRandomInt } from '@shared/functions';
+import { IUser } from '~/entities/User';
+import { getRandomInt } from '~/shared/functions';
 import { IUserDao } from './UserDao';
+// eslint-disable-next-line import/extensions
 import MockDaoMock from '../MockDb/MockDao.mock';
 
 class UserDao extends MockDaoMock implements IUserDao {
   public async getOne(email: string): Promise<IUser | null> {
     const db = await super.openDb();
-    for (const user of db.users) {
-      if (user.email === email) {
-        return user;
-      }
-    }
-    return null;
+    const user = db.users.find((u) => u.email === email);
+    return user ?? null;
   }
 
   public async getAll(): Promise<IUser[]> {
@@ -21,16 +18,19 @@ class UserDao extends MockDaoMock implements IUserDao {
 
   public async add(user: IUser): Promise<void> {
     const db = await super.openDb();
-    user.id = getRandomInt();
-    db.users.push(user);
+    db.users.push({
+      ...user,
+      id: getRandomInt(),
+    });
     await super.saveDb(db);
   }
 
   public async update(user: IUser): Promise<void> {
     const db = await super.openDb();
-    for (let i = 0; i < db.users.length; i++) {
+    for (let i = 0; i < db.users.length; i += 1) {
       if (db.users[i].id === user.id) {
         db.users[i] = user;
+        // eslint-disable-next-line no-await-in-loop
         await super.saveDb(db);
         return;
       }
@@ -40,9 +40,10 @@ class UserDao extends MockDaoMock implements IUserDao {
 
   public async delete(id: number): Promise<void> {
     const db = await super.openDb();
-    for (let i = 0; i < db.users.length; i++) {
+    for (let i = 0; i < db.users.length; i += 1) {
       if (db.users[i].id === id) {
         db.users.splice(i, 1);
+        // eslint-disable-next-line no-await-in-loop
         await super.saveDb(db);
         return;
       }

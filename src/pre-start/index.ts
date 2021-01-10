@@ -17,11 +17,12 @@ import commandLineArgs from 'command-line-args';
       type: String,
     },
   ]);
+  const envType = (options.env as string | undefined) ?? 'development';
   // Set the env file
-  const result2 = dotenv.config({
-    path: path.join(__dirname, `env/${options.env}.env`),
+  const result = dotenv.config({
+    path: path.join(__dirname, `env/.env.${envType}`),
   });
-  if (result2.error) {
-    throw result2.error;
+  if (result.error) {
+    throw result.error;
   }
 })();

@@ -1,10 +1,9 @@
 import jsonfile from 'jsonfile';
-import { IUser } from '@entities/User';
+import { IUser } from '~/entities/User';
 
 interface IDatabase {
   users: IUser[];
 }
-
 class MockDaoMock {
   private readonly dbFilePath = 'src/daos/MockDb/MockDb.json';
 

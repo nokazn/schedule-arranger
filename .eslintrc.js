@@ -40,7 +40,7 @@ module.exports = {
         json: 'never',
       },
     ],
-    'import/no-unresolved': [1, { commonjs: true, amd: true }],
+    'import/no-unresolved': [0],
     'import/no-extraneous-dependencies': [1, { devDependencies: true }],
     'import/prefer-default-export': 0,
 
@@ -50,8 +50,10 @@ module.exports = {
     // typescript-eslint の no-use-before-define を有効にする
     'no-use-before-define': 0,
     '@typescript-eslint/no-use-before-define': 2,
-    // typescript-eslint の no-unuserd-vars を有効にする
+    // typescript-eslint の no-unused-vars を有効にする
     'no-unused-vars': 0,
     '@typescript-eslint/no-unused-vars': 2,
+    // TODO: あとで消す
+    'class-methods-use-this': 1,
   },
 };
