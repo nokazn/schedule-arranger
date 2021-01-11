@@ -9,8 +9,8 @@ import 'express-async-errors';
 import session from 'express-session';
 
 import logger from '~/shared/logger';
-import Router from './routes';
-import { passport } from './auth';
+import Router from '~/routes';
+import { passport } from '~/services/auth';
 import { IRequestError, SESSION_SECRET } from '~/shared/constants';
 
 const app = express();
