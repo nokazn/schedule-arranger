@@ -14,16 +14,6 @@
     "start": "yarn build && node -r module-alias/register ./dist/index.js --env production",
     "test": "nodemon --config ./spec/nodemon.json"
   },
-  "nodemonConfig": {
-    "watch": [
-      "src"
-    ],
-    "ext": "ts, html",
-    "ignore": [
-      "src/public"
-    ],
-    "exec": "ts-node -r tsconfig-paths/register ./src"
-  },
   "_moduleAliases": {
     "~": "dist"
   },
