@@ -18,11 +18,17 @@ import commandLineArgs from 'command-line-args';
     },
   ]);
   const envType = (options.env as string | undefined) ?? 'development';
-  // Set the env file
   const result = dotenv.config({
     path: path.join(__dirname, `env/.env.${envType}`),
   });
   if (result.error) {
     throw result.error;
   }
+
+  const envs = ['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'SESSION_SECRET'];
+  envs.forEach((env) => {
+    if (process.env[env] == null) {
+      throw new Error('Environmental variables are not set correctly.');
+    }
+  });
 })();

@@ -6,55 +6,45 @@ import helmet from 'helmet';
 import express, { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
+import session from 'express-session';
 
 import logger from '~/shared/logger';
-import BaseRouter from './routes';
+import Router from './routes';
+import { passport } from './auth';
+import { IRequestError, SESSION_SECRET } from '~/shared/constants';
 
 const app = express();
-const { BAD_REQUEST } = StatusCodes;
-
-/** **********************************************************************************
- *                              Set basic express settings
- ********************************************************************************** */
+const { INTERNAL_SERVER_ERROR } = StatusCodes;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(helmet());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'short' : 'dev'));
+app.use(
+  session({
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Show routes called in console during development
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
 
-// Security
-if (process.env.NODE_ENV === 'production') {
-  app.use(morgan('short'));
-  app.use(helmet());
-}
+app.use('/', Router);
 
-// Add APIs
-app.use('/api', BaseRouter);
-
-// Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  logger.error(err, true);
-  return res.status(BAD_REQUEST).json({
+app.use((err: IRequestError, req: Request, res: Response, next: NextFunction) => {
+  logger.error(err);
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  res.status(err.status ?? INTERNAL_SERVER_ERROR).json({
     error: err.message,
   });
 });
 
-/** **********************************************************************************
- *                              Serve front-end content
- ********************************************************************************** */
-
-const viewsDir = path.join(__dirname, 'views');
-app.set('views', viewsDir);
-const staticDir = path.join(__dirname, 'public');
-app.use(express.static(staticDir));
-app.get('*', (req: Request, res: Response) => {
-  res.sendFile('index.html', { root: viewsDir });
-});
-
-// Export express instance
 export default app;
