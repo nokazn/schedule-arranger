@@ -6,6 +6,7 @@ module.exports = {
   globals: {
     Atomics: 'readonly',
     SharedArrayBuffer: 'readonly',
+    'jest/global': true,
   },
   extends: [
     'plugin:@typescript-eslint/eslint-recommended',
@@ -20,7 +21,7 @@ module.exports = {
     sourceType: 'module',
     project: ['./tsconfig.json', './tsconfig.prod.json'],
   },
-  plugins: ['@typescript-eslint'],
+  plugins: ['@typescript-eslint', 'jest'],
   rules: {
     // switch 文での prettier との競合を防ぐ
     indent: [2, 2, { SwitchCase: 1 }],
@@ -55,5 +56,6 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 2,
     // TODO: あとで消す
     'class-methods-use-this': 1,
+    'no-undef': 0,
   },
 };

@@ -12,7 +12,7 @@
     "dev:watch": "ts-node-dev -r tsconfig-paths/register --respawn src/index.ts",
     "build": "ts-node build.ts",
     "start": "yarn build && node -r module-alias/register ./dist/index.js --env production",
-    "test": "nodemon --config ./spec/nodemon.json"
+    "test": "jest"
   },
   "_moduleAliases": {
     "~": "dist"
@@ -42,8 +42,8 @@
     "@types/find": "^0.2.1",
     "@types/fs-extra": "^9.0.6",
     "@types/jasmine": "^3.6.2",
+    "@types/jest": "^26.0.20",
     "@types/jsonfile": "^6.0.0",
-    "@types/mocha": "^8.2.0",
     "@types/morgan": "^1.9.2",
     "@types/node": "^14.14.20",
     "@types/passport": "^1.0.5",
@@ -55,13 +55,16 @@
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^7.1.0",
     "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.1.3",
     "find": "^0.3.0",
     "fs-extra": "^9.0.1",
     "jasmine": "^3.6.3",
-    "mocha": "^8.2.1",
+    "jest": "^26.6.3",
     "nodemon": "^2.0.7",
+    "passport-stub": "^1.1.1",
     "prettier": "^2.2.1",
     "supertest": "^6.0.1",
+    "ts-jest": "^26.4.4",
     "ts-node": "^9.1.1",
     "ts-node-dev": "^1.1.1",
     "tsconfig-paths": "^3.9.0",

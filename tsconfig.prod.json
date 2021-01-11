@@ -4,7 +4,7 @@
     "sourceMap": false
   },
   "exclude": [
-    "spec",
+    "tests",
     "src/**/*.mock.ts",
     "src/public/"
   ]

@@ -1,6 +1,7 @@
 node_modules
 dist/*
 .eslintrc.js
+jest.config.js
 **/*.d.ts
 /src/public
 build.ts
