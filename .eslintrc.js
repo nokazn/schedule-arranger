@@ -57,5 +57,6 @@ module.exports = {
     // TODO: あとで消す
     'class-methods-use-this': 1,
     'no-undef': 0,
+    'arrow-body-style': 0,
   },
 };
