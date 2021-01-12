@@ -9,9 +9,15 @@ import 'express-async-errors';
 import session from 'express-session';
 
 import logger from '~/shared/logger';
+import { syncDb } from '~/entities';
 import Router from '~/routes';
 import { passport } from '~/services/auth';
 import { IRequestError, SESSION_SECRET } from '~/shared/constants';
+
+syncDb().catch((err) => {
+  logger.error(err);
+  throw err;
+});
 
 const app = express();
 const { INTERNAL_SERVER_ERROR } = StatusCodes;
