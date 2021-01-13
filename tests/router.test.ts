@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import request from 'supertest';
-// @ts-expect-error
 import passportStub from 'passport-stub';
 import app from '~/server';
 
 describe('/login', () => {
   beforeAll(() => {
     passportStub.install(app);
-    passportStub.login({ username: 'testuser' });
+    passportStub.login({ username: 'test-user' });
   });
 
   afterAll(() => {
     passportStub.logout();
-    passportStub.uninstall(app);
+    passportStub.uninstall();
   });
 
   it('include a link to login', (done) => {
@@ -26,7 +25,7 @@ describe('/login', () => {
   it('show user name when logged in', (done) => {
     request(app)
       .get('/login')
-      .expect(/testuser/)
+      .expect(/test-user/)
       .expect(200, done);
   });
 });

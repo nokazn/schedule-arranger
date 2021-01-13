@@ -1,5 +1,5 @@
 import passport from 'passport';
-import { Strategy as GithubStrategy } from 'passport-github2';
+import { Strategy as GithubStrategy, Profile } from 'passport-github2';
 import type { AuthenticateOptions } from 'passport';
 import type { VerifyCallback } from 'passport-oauth2';
 import type { RequestHandler } from 'express';
@@ -23,15 +23,20 @@ passport.use(
       clientSecret: GITHUB_CLIENT_SECRET,
       callbackURL: `${BASE_URL}:${PORT}/auth/github/callback`,
     },
-    (accessToken: string, refreshToken: string, profile: any, done: VerifyCallback) => {
+    (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
       logger.info(profile);
       process.nextTick(() => {
-        // done(null, profile);
+        if (profile.username == null) {
+          const err = new Error('failed to get username');
+          logger.error(err.message, profile);
+          done(err, profile);
+          return;
+        }
         User.upsert({
-          userId: profile.id as number,
-          username: profile.username as string,
-          displayName: profile.displayName as string,
-          profileUrl: profile.profileUrl as string,
+          userId: parseInt(profile.id, 10),
+          username: profile.username,
+          displayName: profile.displayName,
+          profileUrl: profile.profileUrl,
         })
           .then(() => {
             done(null, profile);
