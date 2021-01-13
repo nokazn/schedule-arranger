@@ -1,4 +1,9 @@
 extends layout
 
 block content
-  h1 Hello #{title}!
+  h1 #{title}!
+  p Welcome to #{title}
+  if user && user.username
+    a(href="/logout") #{user.username} をログアウト
+  else
+    a(href="/login") ログイン
