@@ -52,4 +52,12 @@ passport.use(
 const githubAuthenticator = (options: AuthenticateOptions, cb?: (...args: any[]) => any) =>
   passport.authenticate('github', options, cb) as RequestHandler;
 
-export { passport, githubAuthenticator };
+const authEnsurer: RequestHandler = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    next();
+    return;
+  }
+  res.redirect('/login');
+};
+
+export { passport, githubAuthenticator, authEnsurer };
