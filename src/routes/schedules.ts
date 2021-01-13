@@ -1,8 +1,8 @@
 import { Router, Request } from 'express';
-import { v4 as uuid } from 'uuid';
 import httpStatusCodes from 'http-status-codes';
+import createErrors from 'http-errors';
 
-import { Schedule, Candidate } from '~/entities';
+import { ScheduleDao, CandidateDao } from '~/daos';
 import { authEnsurer } from '~/services/auth';
 import logger from '~/shared/logger';
 
@@ -22,20 +22,16 @@ router.get('/new', authEnsurer, (req, res) => {
 });
 
 router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res) => {
-  const scheduleId = uuid();
-  const updatedAt = new Date();
   // @ts-expect-error
   const createdBy = req.user?.id as number;
   if (!createdBy) {
-    res.status(UNAUTHORIZED).redirect('/schedules/new');
+    res.status(UNAUTHORIZED).send(createErrors());
     return;
   }
-  Schedule.create({
-    scheduleId,
+  ScheduleDao.add({
     scheduleName: req.body.scheduleName.slice(0, 255) || '(名称未設定)',
     memo: req.body.memo,
     createdBy,
-    updatedAt,
   })
     .then((schedule) => {
       const candidates = req.body.candidates
@@ -45,16 +41,16 @@ router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res) => {
         .filter((s) => s !== '')
         .map((c) => ({
           candidateName: c,
-          scheduleId: schedule.getDataValue('scheduleId'),
+          scheduleId: schedule.scheduleId,
         }));
-      return Promise.all([Candidate.bulkCreate(candidates), schedule] as const);
+      return Promise.all([CandidateDao.bulkAdd(candidates), schedule] as const);
     })
     .then(([, schedule]) => {
-      res.redirect(`/schedules/${schedule.getDataValue('scheduleId')}`);
+      res.redirect(`/schedules/${schedule.scheduleId}`);
     })
     .catch((err: Error) => {
       logger.error(err);
-      res.status(INTERNAL_SERVER_ERROR).send();
+      res.status(INTERNAL_SERVER_ERROR).send(createErrors());
     });
 });
 

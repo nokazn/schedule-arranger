@@ -5,6 +5,10 @@ import Candidate from './candidate';
 import Comment from './comment';
 import logger from '~/shared/logger';
 
+export * from './schedule';
+export * from './availability';
+export * from './candidate';
+export * from './comment';
 export { User, Schedule, Availability, Candidate, Comment };
 
 export const syncDb = () => {
