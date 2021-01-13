@@ -7,7 +7,7 @@ export interface CandidateAttributes {
   scheduleId: string;
 }
 
-export interface CandidateCreationAttributes extends Omit<CandidateAttributes, ''> {}
+export interface CandidateCreationAttributes extends Omit<CandidateAttributes, 'candidateId'> {}
 
 const Candidate: ModelDefined<CandidateAttributes, CandidateCreationAttributes> = db.define(
   'candidate',

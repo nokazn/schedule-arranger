@@ -2,14 +2,14 @@ import { ModelDefined, DataTypes } from 'sequelize';
 import { db } from '~/infrastructure/db';
 
 export interface ScheduleAttributes {
-  scheduleId: number;
+  scheduleId: string;
   scheduleName: string;
   memo: string;
   createdBy: number;
-  updatedBy: Date;
+  updatedAt: Date;
 }
 
-export interface ScheduleCreationAttributes extends Omit<ScheduleAttributes, 'scheduleId'> {}
+export interface ScheduleCreationAttributes extends ScheduleAttributes {}
 
 const Schedule: ModelDefined<ScheduleAttributes, ScheduleCreationAttributes> = db.define(
   'schedule',
@@ -31,7 +31,7 @@ const Schedule: ModelDefined<ScheduleAttributes, ScheduleCreationAttributes> = d
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    updatedBy: {
+    updatedAt: {
       type: DataTypes.DATE,
       allowNull: false,
     },
