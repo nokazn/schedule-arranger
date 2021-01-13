@@ -2,6 +2,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import path from 'path';
 import helmet from 'helmet';
+import createError from 'http-errors';
 
 import express, { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
@@ -20,7 +21,7 @@ syncDb().catch((err) => {
 });
 
 const app = express();
-const { INTERNAL_SERVER_ERROR } = StatusCodes;
+const { INTERNAL_SERVER_ERROR, NOT_FOUND } = StatusCodes;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -43,13 +44,17 @@ app.set('view engine', 'pug');
 
 app.use('/', Router);
 
+app.use((req, res, next) => {
+  next(createError(NOT_FOUND));
+});
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: IRequestError, req: Request, res: Response, next: NextFunction) => {
-  logger.error(err);
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-  res.status(err.status ?? INTERNAL_SERVER_ERROR).json({
-    error: err.message,
+app.use((error: IRequestError, req: Request, res: Response, next: NextFunction) => {
+  logger.error(error);
+  res.locals.message = error.message;
+  res.locals.error = req.app.get('env') === 'development' ? error : {};
+  res.status(error.status ?? INTERNAL_SERVER_ERROR).render('error', {
+    error,
   });
 });
 
