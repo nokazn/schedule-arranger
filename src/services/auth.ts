@@ -4,7 +4,7 @@ import type { AuthenticateOptions } from 'passport';
 import type { VerifyCallback } from 'passport-oauth2';
 import type { RequestHandler } from 'express';
 
-import { User } from '~/entities';
+import { UserDao } from '~/daos';
 import logger from '~/shared/logger';
 import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, BASE_URL, PORT } from '~/shared/constants';
 
@@ -32,7 +32,7 @@ passport.use(
           done(err, profile);
           return;
         }
-        User.upsert({
+        UserDao.upsert({
           userId: parseInt(profile.id, 10),
           username: profile.username,
           displayName: profile.displayName,

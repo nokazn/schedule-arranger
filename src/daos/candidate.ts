@@ -24,6 +24,7 @@ class CandidateDao implements ICandidateDao {
     return Candidate.create(candidate)
       .then((c) => c.get())
       .catch((err: Error) => {
+        logger.error(err);
         throw err;
       });
   }
@@ -34,6 +35,7 @@ class CandidateDao implements ICandidateDao {
     return Candidate.bulkCreate(candidates)
       .then((l) => l.map((c) => c.get()))
       .catch((err: Error) => {
+        logger.error(err);
         throw err;
       });
   }

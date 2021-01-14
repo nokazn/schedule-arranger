@@ -55,7 +55,7 @@ module.exports = {
     'no-unused-vars': 0,
     '@typescript-eslint/no-unused-vars': 2,
     // TODO: あとで消す
-    'class-methods-use-this': 1,
+    'class-methods-use-this': 0,
     'no-undef': 0,
     'arrow-body-style': 0,
   },

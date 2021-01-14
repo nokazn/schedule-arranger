@@ -40,6 +40,7 @@ class ScheduleDao implements IScheduleDao {
     })
       .then((schedule) => schedule.get())
       .catch((err: Error) => {
+        logger.error(err);
         throw err;
       });
   }
