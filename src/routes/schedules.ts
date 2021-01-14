@@ -34,11 +34,11 @@ router.get('/new', authEnsurer, (req, res) => {
   });
 });
 
-router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res) => {
+router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res, next) => {
   // @ts-expect-error
   const createdBy = req.user?.id as number;
   if (!createdBy) {
-    res.status(UNAUTHORIZED).send(createErrors());
+    next(createErrors(UNAUTHORIZED));
     return;
   }
   ScheduleDao.add({
@@ -63,7 +63,7 @@ router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res) => {
     })
     .catch((err: Error) => {
       logger.error(err);
-      res.status(INTERNAL_SERVER_ERROR).send(createErrors());
+      next(createErrors(INTERNAL_SERVER_ERROR));
     });
 });
 

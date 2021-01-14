@@ -8,7 +8,7 @@ import logger from '~/shared/logger';
 const router = Router();
 const { INTERNAL_SERVER_ERROR } = httpStatusCodes;
 
-router.get('/', (req, res) => {
+router.get('/', (req, res, next) => {
   logger.info(req.user);
   if (req.user == null) {
     res.render('top', {
@@ -35,7 +35,7 @@ router.get('/', (req, res) => {
     })
     .catch((err: Error) => {
       logger.error(err);
-      res.status(INTERNAL_SERVER_ERROR).send(createErrors());
+      next(createErrors(INTERNAL_SERVER_ERROR));
     });
 });
 
