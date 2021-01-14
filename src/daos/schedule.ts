@@ -6,11 +6,21 @@ import { Schedule, ScheduleAttributes, ScheduleCreationAttributes } from '~/enti
 import logger from '~/shared/logger';
 
 export interface IScheduleDao {
+  getOne(options: FindOptions<ScheduleAttributes>): Promise<ScheduleAttributes | undefined>;
   getAll(options: FindOptions<ScheduleAttributes>): Promise<ScheduleAttributes[]>;
   add(params: ScheduleCreationAttributes): Promise<ScheduleAttributes>;
 }
 
 class ScheduleDao implements IScheduleDao {
+  public getOne(options?: FindOptions<ScheduleAttributes>): Promise<ScheduleAttributes | undefined> {
+    return Schedule.findOne(options)
+      .then((schedule) => schedule?.get())
+      .catch((err: Error) => {
+        logger.error(err);
+        return undefined;
+      });
+  }
+
   public getAll(options?: FindOptions<ScheduleAttributes>): Promise<ScheduleAttributes[]> {
     return Schedule.findAll(options)
       .then((schedules) => schedules.map((s) => s.get()))
