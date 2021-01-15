@@ -37,7 +37,7 @@ router.get('/new', authEnsurer, (req, res) => {
 router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res, next) => {
   // @ts-expect-error
   const createdBy = req.user?.id as number;
-  if (!createdBy) {
+  if (createdBy == null) {
     next(createErrors(UNAUTHORIZED));
     return;
   }
