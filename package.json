@@ -8,8 +8,8 @@
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
     "tsc": "tsc -p ./tsconfig.json --noEmit",
-    "dev": "ts-node -r tsconfig-paths/register src/index.ts",
-    "dev:watch": "ts-node-dev -r tsconfig-paths/register --respawn src/index.ts",
+    "dev": "ts-node --files ./src/@types/express.d -r tsconfig-paths/register --files src/index.ts",
+    "dev:watch": "ts-node-dev -r tsconfig-paths/register --respawn --files src/index.ts",
     "build": "ts-node build.ts",
     "start": "yarn build && node -r module-alias/register ./dist/index.js --env production",
     "test": "jest"
