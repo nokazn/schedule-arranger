@@ -43,11 +43,12 @@ router.get('/new', authEnsurer, (req, res) => {
 });
 
 router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res, next) => {
-  if (req.user == null) {
+  const createdBy = parseInt(req.user?.id ?? '', 10);
+  if (req.user == null || Number.isNaN(createdBy)) {
+    logger.error(req.user);
     next(createErrors(UNAUTHORIZED));
     return;
   }
-  const createdBy = parseInt(req.user.id, 10);
   ScheduleDao.add({
     scheduleName: req.body.scheduleName.slice(0, 255) || '(名称未設定)',
     memo: req.body.memo,

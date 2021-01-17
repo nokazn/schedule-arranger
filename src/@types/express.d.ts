@@ -2,8 +2,7 @@ import { Profile } from 'passport';
 
 declare global {
   namespace Express {
-    type ExtendedProfile = Profile & { provider: 'github' };
-    interface User extends ExtendedProfile {}
+    interface User extends Profile {}
   }
 }
 
