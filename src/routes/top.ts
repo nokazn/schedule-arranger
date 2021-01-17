@@ -20,13 +20,11 @@ router.get('/', (req, res, next) => {
 
   ScheduleDao.getAll({
     where: {
-      // @ts-expect-error
-      createdBy: req.user.id as string,
+      createdBy: parseInt(req.user.id, 10),
     },
     order: [['"updatedAt', 'DESC']],
   })
     .then((schedules) => {
-      logger.info(schedules);
       res.render('top', {
         title: '予定調整くん',
         user: req.user,

@@ -12,7 +12,7 @@ passport.serializeUser((user, done) => {
   done(null, user);
 });
 
-passport.deserializeUser((obj: {}, done) => {
+passport.deserializeUser((obj: Express.User, done) => {
   done(null, obj);
 });
 
@@ -24,7 +24,6 @@ passport.use(
       callbackURL: `${BASE_URL}:${PORT}/auth/github/callback`,
     },
     (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
-      logger.info(profile);
       process.nextTick(() => {
         if (profile.username == null) {
           const err = new Error('failed to get username');
