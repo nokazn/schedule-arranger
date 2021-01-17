@@ -3,13 +3,21 @@ import request from 'supertest';
 import passportStub from 'passport-stub';
 
 import app from '~/server';
-import { Candidate, Schedule } from '~/entities';
+import { Candidate, User } from '~/entities';
 import { UserDao } from '~/daos';
+import { deleteScheduleAggregate } from './utils';
+
+const user = {
+  id: 0,
+  username: 'test-user',
+  displayName: 'test-user',
+  profileUrl: 'path/to/test-user',
+};
 
 describe('/login', () => {
   beforeAll(() => {
     passportStub.install(app);
-    passportStub.login({ username: 'test-user' });
+    passportStub.login(user);
   });
 
   afterAll((done) => {
@@ -43,10 +51,7 @@ describe('/logout', () => {
 describe('/schedules', () => {
   beforeAll(() => {
     passportStub.install(app);
-    passportStub.login({
-      id: 0,
-      username: 'test-user',
-    });
+    passportStub.login(user);
   });
 
   afterAll(() => {
@@ -55,14 +60,8 @@ describe('/schedules', () => {
   });
 
   it('create a schedule and then show it', async (done) => {
-    const res = await UserDao.upsert({
-      userId: 0,
-      username: 'test-user',
-      displayName: 'test-user',
-      profileUrl: 'path/to/test-user',
-    })
+    const res = await UserDao.upsert({ ...user, userId: user.id })
       .then(() => {
-        console.info('then');
         return request(app)
           .post('/schedules')
           .send({
@@ -98,21 +97,59 @@ describe('/schedules', () => {
           console.error(schedulePath, scheduleId);
           throw new Error('scheduleId is incorrect');
         }
-        console.info('then1');
-        return Candidate.findAll({ where: { scheduleId } })
-          .then((candidates) => Promise.all(candidates.map((c) => c.destroy())))
-          .then(() => Schedule.findByPk(scheduleId))
-          .then((s) => s?.destroy())
-          .then(() => {
-            console.info('then2');
-          });
+        return deleteScheduleAggregate(scheduleId, done);
       })
       .catch((err) => {
         console.error(err);
+      });
+  });
+});
+
+describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
+  beforeAll(() => {
+    passportStub.install(app);
+    passportStub.login(user);
+  });
+
+  afterAll(() => {
+    passportStub.logout();
+    passportStub.uninstall();
+  });
+
+  it('update availabilities', (done) => {
+    User.upsert({ ...user, userId: user.id })
+      .then(() =>
+        request(app).post('/schedules').send({
+          scheduleName: 'テスト出欠更新予定1',
+          memo: 'テスト出欠更新メモ1',
+          candidates: 'テスト出欠更新候補1',
+        }),
+      )
+      .then((res) => {
+        const schedulePath = (res.headers as Record<string, string>).location;
+        const scheduleId = schedulePath?.split('/schedules/')[1];
+        if (typeof scheduleId !== 'string') {
+          console.error(schedulePath);
+          throw new Error('scheduleId is incorrect');
+        }
+        return Promise.all([Candidate.findOne({ where: { scheduleId } }), scheduleId] as const);
       })
-      .finally(() => {
-        console.log('finnaly');
-        done();
+      .then(([candidate, scheduleId]) => {
+        const candidateId = candidate?.getDataValue('candidateId');
+        if (candidateId == null) {
+          throw new Error('candidate has failed to be found.');
+        }
+        return Promise.all([
+          request(app)
+            .post(`/schedules/${scheduleId}/users/${user.id}/candidates/${candidateId}`)
+            .send({ availability: 2 }) // 出席
+            .expect('{"status":"OK","availability":2}'),
+          scheduleId,
+        ]);
+      })
+      .then(([, scheduleId]) => deleteScheduleAggregate(scheduleId, done))
+      .catch((err: Error) => {
+        console.error(err);
       });
   });
 });
