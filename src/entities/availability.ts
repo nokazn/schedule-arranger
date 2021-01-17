@@ -3,8 +3,8 @@ import { db } from '~/infrastructure/db';
 
 export interface AvailabilityAttributes {
   candidateId: number;
-  userId: string;
-  availability: number;
+  userId: number;
+  availability: 0 | 1 | 2;
   scheduleId: string;
 }
 
