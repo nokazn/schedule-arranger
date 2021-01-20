@@ -4,7 +4,7 @@
     "target": "es6",
     "module": "commonjs",
     // "lib": [],
-    // "allowJs": true,
+    "allowJs": true,
     // "checkJs": true,
     // "jsx": "preserve",
     // "declaration": true,
@@ -63,8 +63,12 @@
     "src/**/*.ts",
     "app/**/*.ts",
     "tests/**/*.ts",
+    // ESLint で @typescript-eslint/parser が認識できるように
+    "**/jest.*.js",
+    "./.eslintrc.js"
   ],
   "exclude": [
-    "src/public/"
+    "src/public/",
+    "**/node_modules",
   ]
 }
