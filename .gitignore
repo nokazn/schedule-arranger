@@ -1,5 +1,6 @@
 node_modules
 dist/*
+src/public/js/*.js
 *.log
 **/.env*
 !**/.env.*.sample
