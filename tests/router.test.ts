@@ -3,7 +3,8 @@ import request from 'supertest';
 import passportStub from 'passport-stub';
 
 import app from '~/server';
-import { Candidate, User } from '~/entities';
+import { db } from '~/infrastructure/db';
+import { Candidate, User, Availability, AvailabilityAttributes } from '~/entities';
 import { UserDao } from '~/daos';
 import { deleteScheduleAggregate } from './utils';
 
@@ -14,16 +15,20 @@ const user = {
   profileUrl: 'path/to/test-user',
 };
 
+afterAll(async () => {
+  // これがないと connection を張ったままになってしまい、テストが exit しない
+  await Promise.all([db.close()]);
+});
+
 describe('/login', () => {
   beforeAll(() => {
     passportStub.install(app);
     passportStub.login(user);
   });
 
-  afterAll((done) => {
+  afterAll(() => {
     passportStub.logout();
     passportStub.uninstall();
-    done();
   });
 
   it('include a link to login', (done) => {
@@ -88,7 +93,7 @@ describe('/schedules', () => {
       return;
     }
 
-    request(app)
+    await request(app)
       .get(schedulePath)
       .expect(200)
       .then(() => {
@@ -116,8 +121,9 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
     passportStub.uninstall();
   });
 
-  it('update availabilities', (done) => {
-    User.upsert({ ...user, userId: user.id })
+  it('update availabilities', () => {
+    const availability = 2;
+    return User.upsert({ ...user, userId: user.id })
       .then(() =>
         request(app).post('/schedules').send({
           scheduleName: 'テスト出欠更新予定1',
@@ -139,17 +145,48 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
         if (candidateId == null) {
           throw new Error('candidate has failed to be found.');
         }
+        const availabilityParams: AvailabilityAttributes = {
+          userId: user.id,
+          scheduleId,
+          candidateId,
+          availability,
+        };
         return Promise.all([
           request(app)
             .post(`/schedules/${scheduleId}/users/${user.id}/candidates/${candidateId}`)
-            .send({ availability: 2 }) // 出席
+            .send({ availability }) // 出席
             .expect('{"status":"OK","availability":2}'),
-          scheduleId,
-        ]);
+          availabilityParams,
+        ] as const);
       })
-      .then(([, scheduleId]) => deleteScheduleAggregate(scheduleId, done))
+      .then(([, availabilityParams]) => {
+        return Promise.all([
+          Availability.findAll({
+            where: {
+              scheduleId: availabilityParams.scheduleId,
+            },
+          }),
+          availabilityParams,
+        ] as const);
+      })
+      .then(([availabilities, availabilityParams]) => {
+        expect(
+          availabilities.map<AvailabilityAttributes>((a) => {
+            const v = a.get();
+            return {
+              scheduleId: v.scheduleId,
+              userId: v.userId,
+              candidateId: v.candidateId,
+              availability: v.availability,
+            };
+          }),
+        ).toEqual([availabilityParams]);
+        return availabilityParams.scheduleId;
+      })
+      .then((scheduleId) => deleteScheduleAggregate(scheduleId))
       .catch((err: Error) => {
         console.error(err);
+        // done();
       });
   });
 });
