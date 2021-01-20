@@ -6,9 +6,9 @@ import ForkTsCheckerPlugin from 'fork-ts-checker-webpack-plugin';
 const extensions = ['.ts', 'tsx', 'js', 'jsx'];
 
 const config: Configuration = {
-  context: path.join(__dirname),
+  context: __dirname,
   mode: 'none',
-  entry: path.join(__dirname, '/app/entry'),
+  entry: path.join(__dirname, '/src/client/entry'),
   output: {
     path: path.join(__dirname, '/src/public/js'),
     filename: 'bundle.js',

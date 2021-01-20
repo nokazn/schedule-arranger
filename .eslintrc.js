@@ -26,7 +26,8 @@ module.exports = {
     // switch 文での prettier との競合を防ぐ
     indent: [2, 2, { SwitchCase: 1 }],
     'lines-between-class-members': 0,
-    'no-console': 0,
+    'no-console': [1, { allow: ['warn', 'error', 'info'] }],
+    'no-alert': 0,
 
     /**
      * eslint-plugin-import

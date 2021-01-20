@@ -61,7 +61,6 @@
   },
   "include": [
     "src/**/*.ts",
-    "app/**/*.ts",
     "tests/**/*.ts",
     // ESLint で @typescript-eslint/parser が認識できるように
     "**/jest.*.js",

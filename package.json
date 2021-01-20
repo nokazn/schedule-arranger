@@ -10,7 +10,10 @@
     "tsc": "tsc -p ./tsconfig.json --noEmit",
     "dev": "ts-node --files ./src/@types/express.d -r tsconfig-paths/register --files src/index.ts",
     "dev:watch": "ts-node-dev -r tsconfig-paths/register --respawn --files src/index.ts",
-    "build": "ts-node build.ts",
+    "build:client": "webpack -c webpack.config.ts",
+    "build:client:watch": "webpack watch -c webpack.config.ts",
+    "build:server": "ts-node build.ts",
+    "build": "webpack && ts-node build.ts",
     "start": "yarn build && node -r module-alias/register ./dist/index.js --env production",
     "test": "jest"
   },
