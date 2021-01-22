@@ -2,8 +2,8 @@ import { ModelDefined, DataTypes } from 'sequelize';
 import { db } from '~/infrastructure/db';
 
 export interface CommentAttributes {
-  schduleId: number;
-  uesrId: number;
+  scheduleId: number;
+  userId: number;
   comment: string;
 }
 
