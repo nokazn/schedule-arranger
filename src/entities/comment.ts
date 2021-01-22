@@ -13,7 +13,7 @@ const Comment: ModelDefined<CommentAttributes, CommentCreationAttributes> = db.d
   'comments',
   {
     scheduleId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUIDV4,
       primaryKey: true,
       allowNull: false,
     },
