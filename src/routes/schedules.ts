@@ -3,17 +3,27 @@ import httpStatusCodes from 'http-status-codes';
 import createErrors from 'http-errors';
 import type { Profile } from 'passport';
 
-import { User, ScheduleAttributes, CandidateAttributes, AvailabilityAttributes } from '~/entities';
-import { ScheduleDao, CandidateDao, AvailabilityDao } from '~/daos';
+import { User } from '~/entities';
+import type {
+  UserAttributes,
+  ScheduleAttributes,
+  CandidateAttributes,
+  AvailabilityAttributes,
+  CommentAttributes,
+} from '~/entities';
+import { ScheduleDao, CandidateDao, AvailabilityDao, CommentDao } from '~/daos';
 import { authEnsurer } from '~/services/auth';
 import logger from '~/shared/logger';
 
 type Availability = AvailabilityAttributes['availability'];
+type UserId = UserAttributes['userId'];
+type CandidateId = CandidateAttributes['candidateId'];
 type UserInAvailabilities = {
   isSelf: boolean;
-  userId: number;
+  userId: UserId;
   username: string;
 };
+type AvailabilityMap = Map<CandidateId, Availability>;
 
 type CreationBody = {
   scheduleName: string;
@@ -30,7 +40,9 @@ type ScheduleDetailRenderOptions = {
   schedule: ScheduleAttributes;
   candidates: CandidateAttributes[];
   users: UserInAvailabilities[];
+  // TODO: 型定義
   availabilityMapMap: Map<number, Map<number, Availability>>;
+  commentMap: Map<CommentAttributes['userId'], CommentAttributes>;
 };
 
 const router = Router();
@@ -135,7 +147,7 @@ router.get('/:scheduleId', authEnsurer, async (req: Request<ScheduleDetailParam>
 
   // req.user と availabilities 内の user から users を作成
   const userId = parseInt(req.user.id, 10);
-  const userMap = new Map<number, UserInAvailabilities>([
+  const userMap = new Map<UserId, UserInAvailabilities>([
     [
       userId,
       {
@@ -160,16 +172,16 @@ router.get('/:scheduleId', authEnsurer, async (req: Request<ScheduleDetailParam>
   const users = [...userMap.values()];
 
   // availabilities から availabilityMapMap を作成
-  const availabilityMapMap = new Map<number, Map<number, Availability>>();
+  const availabilityMapMap = new Map<UserId, AvailabilityMap>();
   availabilities.forEach((a) => {
-    const map = availabilityMapMap.get(a.userId) || new Map<number, Availability>();
+    const map = availabilityMapMap.get(a.userId) || new Map<CandidateId, Availability>();
     map.set(a.candidateId, a.availability);
     availabilityMapMap.set(a.userId, map);
   });
   // availabilities にない出席情報を補完
   users.forEach((u) => {
     candidates.forEach((c) => {
-      const map = availabilityMapMap.get(u.userId) ?? new Map<number, Availability>();
+      const map = availabilityMapMap.get(u.userId) ?? new Map<CandidateId, Availability>();
       if (!map.has(c.candidateId)) {
         map.set(c.candidateId, 0);
         availabilityMapMap.set(u.userId, map);
@@ -177,12 +189,19 @@ router.get('/:scheduleId', authEnsurer, async (req: Request<ScheduleDetailParam>
     });
   });
 
+  const comments = await CommentDao.getAll({ where: { scheduleId: schedule.scheduleId } }).catch((err: Error) => {
+    logger.error(err);
+    return [] as CommentAttributes[];
+  });
+  const commentMap = new Map<UserId, CommentAttributes>(comments.map((c) => [c.userId, c]));
+
   res.render<ScheduleDetailRenderOptions>('schedule', {
     user: req.user,
     schedule,
     candidates,
     users,
     availabilityMapMap,
+    commentMap,
   });
 });
 

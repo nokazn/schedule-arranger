@@ -4,7 +4,7 @@ import passportStub from 'passport-stub';
 
 import app from '~/server';
 import { db } from '~/infrastructure/db';
-import { Candidate, User, Availability, AvailabilityAttributes } from '~/entities';
+import { Candidate, User, Availability, Comment, AvailabilityAttributes } from '~/entities';
 import { UserDao } from '~/daos';
 import { deleteScheduleAggregate } from './utils';
 
@@ -187,6 +187,53 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
       .catch((err: Error) => {
         console.error(err);
         // done();
+      });
+  });
+});
+
+describe('/schedules/scheduleId/users/:userId/comments', () => {
+  beforeAll(() => {
+    passportStub.install(app);
+    passportStub.login(user);
+  });
+
+  afterAll(() => {
+    passportStub.logout();
+    passportStub.uninstall();
+  });
+
+  it('update comments', () => {
+    const schedule = {
+      scheduleName: 'テストコメント更新予定1',
+      memo: 'テストコメント更新メモ1',
+      candidates: 'テストコメント更新候補1',
+    };
+    const comment = 'test comment';
+    return User.upsert({ ...user, userId: user.id })
+      .then(() => request(app).post('/schedules').send(schedule))
+      .then((res) => {
+        const schedulePath = (res.headers as Record<string, string>).location;
+        const scheduleId = schedulePath?.split('/schedules/')[1];
+        if (typeof scheduleId !== 'string') {
+          console.error(schedulePath);
+          throw new Error('scheduleId is incorrect');
+        }
+        return Promise.all([
+          request(app)
+            .post(`/schedules/${scheduleId}/users/${user.id}/comments`)
+            .send({ comment })
+            .expect(`{"status":"OK","comment":"${comment}"}`),
+          scheduleId,
+        ] as const);
+      })
+      .then(([, scheduleId]) => Promise.all([Comment.findAll({ where: { scheduleId } }), scheduleId] as const))
+      .then(([comments, scheduleId]) => {
+        expect(comments.length).toBe(1);
+        expect(comments[0].getDataValue('comment')).toBe(comment);
+        return deleteScheduleAggregate(scheduleId);
+      })
+      .catch((err: Error) => {
+        console.error(err);
       });
   });
 });

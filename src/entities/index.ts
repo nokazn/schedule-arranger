@@ -5,6 +5,7 @@ import Candidate from './candidate';
 import Comment from './comment';
 import logger from '~/shared/logger';
 
+export * from './user';
 export * from './schedule';
 export * from './availability';
 export * from './candidate';
