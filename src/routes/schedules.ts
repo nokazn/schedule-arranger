@@ -96,10 +96,7 @@ router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res, next) =>
   })
     .then((schedule) => {
       const candidates = parseCandidateNames(req);
-      return Promise.all([createCandidatesAndRedirect(candidates, schedule.scheduleId, res), schedule] as const);
-    })
-    .then(([, schedule]) => {
-      res.redirect(`/schedules/${schedule.scheduleId}`);
+      return createCandidatesAndRedirect(candidates, schedule.scheduleId, res);
     })
     .catch((err: Error) => {
       logger.error(err);

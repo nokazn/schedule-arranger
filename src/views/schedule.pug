@@ -31,11 +31,13 @@ block content
       each user in users
         if user.isSelf
           td
-            p#self-comment #{commentMap.get(user.userId).comment}
+            if commentMap.get(user.userId) != null
+              p#self-comment #{commentMap.get(user.userId).comment}
             button(
               data-schedule-id=schedule.scheduleId
               data-user-id=user.userId
             )#self-comment-button 編集
         else
           td
-            p #{commentMap.get(user.userId).comment}
+            if commentMap.get(user.userId) != null
+              p #{commentMap.get(user.userId).comment}
