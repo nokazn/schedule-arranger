@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import type { AvailabilityAttributes } from '~/entities';
+import type { AvailabilityAttributes, CommentAttributes } from '~/entities';
 
 $('.availability-toggle-button').each((i, e) => {
   const button = $(e);
@@ -25,4 +25,23 @@ $('.availability-toggle-button').each((i, e) => {
       alert('更新が失敗しました。');
     });
   });
+});
+
+const buttonSelfComment = $('#self-comment-button');
+buttonSelfComment.on('click', () => {
+  const scheduleId = buttonSelfComment.data('schedule-id') as string;
+  const userId = parseInt(buttonSelfComment.data('user-id') as string, 10);
+  const comment = prompt('コメント255文字以内で入力してください。');
+  if (comment) {
+    $.post(
+      `/schedules/${scheduleId}/users/${userId}/comments`,
+      {
+        comment,
+      },
+      (data: CommentAttributes) => $('#self-comment').text(data.comment),
+    ).catch((err) => {
+      console.error(err);
+      alert('コメントの投稿に失敗しました');
+    });
+  }
 });
