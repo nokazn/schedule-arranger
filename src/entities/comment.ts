@@ -2,7 +2,7 @@ import { ModelDefined, DataTypes } from 'sequelize';
 import { db } from '~/infrastructure/db';
 
 export interface CommentAttributes {
-  scheduleId: number;
+  scheduleId: string;
   userId: number;
   comment: string;
 }
@@ -13,7 +13,7 @@ const Comment: ModelDefined<CommentAttributes, CommentCreationAttributes> = db.d
   'comments',
   {
     scheduleId: {
-      type: DataTypes.UUIDV4,
+      type: DataTypes.UUID,
       primaryKey: true,
       allowNull: false,
     },
