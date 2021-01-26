@@ -1,17 +1,17 @@
-import type { Model } from 'sequelize';
-import { Availability, Candidate, Schedule } from '~/entities';
-import type { AvailabilityAttributes, AvailabilityCreationAttributes } from '~/entities';
+import { Availability, Candidate, Schedule, Comment } from '~/entities';
 
 /**
  * it の中で Promise を返せるようにする必要がある
  */
 export const deleteScheduleAggregate = async (scheduleId: string, done?: jest.DoneCallback): Promise<void> => {
-  const availabilities = await Availability.findAll({ where: { scheduleId } }).catch((e: Error) => {
-    console.error(e);
-    return [] as Model<AvailabilityAttributes, AvailabilityCreationAttributes>[];
-  });
+  const deleteComments = Comment.findAll({ where: { scheduleId } })
+    .then((comments) => Promise.all(comments.map((c) => c.destroy())))
+    .catch((e: Error) => {
+      console.error(e);
+    });
 
-  return Promise.all(availabilities.map((a) => a.destroy()))
+  const deleteAttributes = Availability.findAll({ where: { scheduleId } })
+    .then((availabilities) => Promise.all(availabilities.map((a) => a.destroy())))
     .then(() => Candidate.findAll({ where: { scheduleId } }))
     .then((candidates) => Promise.all(candidates.map((c) => c.destroy())))
     .then(() => Schedule.findByPk(scheduleId))
@@ -21,5 +21,11 @@ export const deleteScheduleAggregate = async (scheduleId: string, done?: jest.Do
     })
     .finally(() => {
       if (done != null) done();
+    });
+
+  return Promise.all([deleteComments, deleteAttributes] as const)
+    .then(() => {})
+    .catch((err) => {
+      console.error(err);
     });
 };
