@@ -44,9 +44,37 @@ type ScheduleDetailRenderOptions = {
   availabilityMapMap: Map<number, Map<number, Availability>>;
   commentMap: Map<CommentAttributes['userId'], CommentAttributes>;
 };
+type ScheduleEditRenderOptions = {
+  user: Profile | undefined;
+  schedule: ScheduleAttributes;
+  candidates: CandidateAttributes[];
+};
 
 const router = Router();
 const { UNAUTHORIZED, NOT_FOUND, INTERNAL_SERVER_ERROR } = httpStatusCodes;
+
+const parseCandidateNames = (req: Request<{}, {}, CreationBody>): string[] => {
+  return req.body.candidates
+    .trim()
+    .split('\n')
+    .map((s) => s.trim())
+    .filter((s) => s !== '');
+};
+
+const createCandidatesAndRedirect = (
+  candidateNames: string[],
+  scheduleId: string,
+  res: Response,
+): Promise<CandidateAttributes[]> => {
+  const candidates = candidateNames.map((c) => ({
+    candidateName: c,
+    scheduleId,
+  }));
+  return CandidateDao.bulkAdd(candidates).then((c) => {
+    res.redirect(`/schedules/${scheduleId}`);
+    return c;
+  });
+};
 
 router.get('/new', authEnsurer, (req, res) => {
   res.render('new', {
@@ -67,16 +95,8 @@ router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res, next) =>
     createdBy,
   })
     .then((schedule) => {
-      const candidates = req.body.candidates
-        .trim()
-        .split('\n')
-        .map((s) => s.trim())
-        .filter((s) => s !== '')
-        .map((c) => ({
-          candidateName: c,
-          scheduleId: schedule.scheduleId,
-        }));
-      return Promise.all([CandidateDao.bulkAdd(candidates), schedule] as const);
+      const candidates = parseCandidateNames(req);
+      return Promise.all([createCandidatesAndRedirect(candidates, schedule.scheduleId, res), schedule] as const);
     })
     .then(([, schedule]) => {
       res.redirect(`/schedules/${schedule.scheduleId}`);
@@ -203,6 +223,35 @@ router.get('/:scheduleId', authEnsurer, async (req: Request<ScheduleDetailParam>
     availabilityMapMap,
     commentMap,
   });
+});
+
+router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleDetailParam>, res, next) => {
+  const schedule = await ScheduleDao.getOne({
+    where: { scheduleId: req.params.scheduleId },
+  }).catch((err: Error) => {
+    console.error(err);
+    return undefined;
+  });
+
+  if (schedule == null || req.user == null || schedule.createdBy !== parseInt(req.user.id, 10)) {
+    next(createErrors(NOT_FOUND, new Error('指定された予定がない、または、予定する権限がありません')));
+    return;
+  }
+
+  CandidateDao.getAll({
+    where: { scheduleId: schedule.scheduleId },
+    order: [['"candidateId', 'ASC']],
+  })
+    .then((candidates) => {
+      res.render<ScheduleEditRenderOptions>('edit', {
+        user: req.user,
+        schedule,
+        candidates,
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 });
 
 export default router;
