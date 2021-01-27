@@ -3,7 +3,7 @@ import { Availability, Candidate, Schedule, Comment } from '~/entities';
 /**
  * it の中で Promise を返せるようにする必要がある
  */
-export const deleteScheduleAggregate = async (scheduleId: string, done?: jest.DoneCallback): Promise<void> => {
+export const deleteScheduleAggregate = async (scheduleId: string, done?: () => void): Promise<void> => {
   const deleteComments = Comment.findAll({ where: { scheduleId } })
     .then((comments) => Promise.all(comments.map((c) => c.destroy())))
     .catch((e: Error) => {

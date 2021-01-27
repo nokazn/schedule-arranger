@@ -6,7 +6,7 @@ import app from '~/server';
 import { db } from '~/infrastructure/db';
 import { Candidate, User, Availability, Comment, AvailabilityAttributes, Schedule } from '~/entities';
 import { UserDao } from '~/daos';
-import { deleteScheduleAggregate } from './utils';
+import { deleteScheduleAggregate } from '~/routes/utils';
 
 const user = {
   id: 0,

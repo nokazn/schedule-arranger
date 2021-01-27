@@ -14,6 +14,7 @@ import type {
 import { ScheduleDao, CandidateDao, AvailabilityDao, CommentDao } from '~/daos';
 import { authEnsurer } from '~/services/auth';
 import logger from '~/shared/logger';
+import { deleteScheduleAggregate } from '~/routes/utils';
 
 type Availability = AvailabilityAttributes['availability'];
 type UserId = UserAttributes['userId'];
@@ -61,9 +62,9 @@ const { BAD_REQUEST, UNAUTHORIZED, NOT_FOUND, INTERNAL_SERVER_ERROR } = httpStat
 
 const sliceScheduleName = (scheduleName: string | undefined | null) => scheduleName?.slice(0, 255) || '(名称未設定)';
 
-const parseCandidateNames = (req: Request<{}, {}, CreationBody>): string[] => {
+const parseCandidateNames = (req: Request<{}, {}, Partial<CreationBody>>): string[] | undefined => {
   return req.body.candidates
-    .trim()
+    ?.trim()
     .split('\n')
     .map((s) => s.trim())
     .filter((s) => s !== '');
@@ -110,7 +111,10 @@ router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res, next) =>
   })
     .then((schedule) => {
       const candidates = parseCandidateNames(req);
-      return createCandidatesAndRedirect(candidates, schedule.scheduleId, res);
+      if (candidates != null) {
+        return createCandidatesAndRedirect(candidates, schedule.scheduleId, res);
+      }
+      return Promise.resolve([]);
     })
     .catch((err: Error) => {
       logger.error(err);
@@ -289,8 +293,21 @@ router.post(
       next(createErrors(UNAUTHORIZED, new Error('予定する権限がありません')));
       return;
     }
-    if (parseInt(req.query.edit, 10) !== 1) {
+    if (
+      (req.query.edit == null || parseInt(req.query.edit, 10) !== 1) &&
+      (req.query.delete == null || parseInt(req.query.delete, 10) !== 1)
+    ) {
       next(createErrors(BAD_REQUEST, '不正なリクエストです。'));
+      return;
+    }
+
+    if (req.query.delete != null && parseInt(req.query.delete, 10) === 1) {
+      deleteScheduleAggregate(req.params.scheduleId, () => {
+        res.redirect('/');
+      }).catch((err) => {
+        logger.error(err);
+        next(createErrors(INTERNAL_SERVER_ERROR));
+      });
       return;
     }
 
@@ -306,7 +323,7 @@ router.post(
 
     // 追加されてるかチェック
     const candidateNames = parseCandidateNames(req);
-    if (candidateNames.length > 0) {
+    if (candidateNames != null && candidateNames.length > 0) {
       createCandidatesAndRedirect(candidateNames, schedule.scheduleId, res).catch((err: Error) => {
         logger.error(err);
         next(createErrors(INTERNAL_SERVER_ERROR));
