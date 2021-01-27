@@ -4,7 +4,7 @@ import passportStub from 'passport-stub';
 
 import app from '~/server';
 import { db } from '~/infrastructure/db';
-import { Candidate, User, Availability, Comment, AvailabilityAttributes } from '~/entities';
+import { Candidate, User, Availability, Comment, AvailabilityAttributes, Schedule } from '~/entities';
 import { UserDao } from '~/daos';
 import { deleteScheduleAggregate } from './utils';
 
@@ -122,15 +122,14 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
   });
 
   it('update availabilities', () => {
+    const schedule = {
+      scheduleName: 'テスト出欠更新予定1',
+      memo: 'テスト出欠更新メモ1',
+      candidates: 'テスト出欠更新候補1',
+    };
     const availability = 2;
     return User.upsert({ ...user, userId: user.id })
-      .then(() =>
-        request(app).post('/schedules').send({
-          scheduleName: 'テスト出欠更新予定1',
-          memo: 'テスト出欠更新メモ1',
-          candidates: 'テスト出欠更新候補1',
-        }),
-      )
+      .then(() => request(app).post('/schedules').send(schedule))
       .then((res) => {
         const schedulePath = (res.headers as Record<string, string>).location;
         const scheduleId = schedulePath?.split('/schedules/')[1];
@@ -187,6 +186,67 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
       .catch((err: Error) => {
         console.error(err);
         // done();
+      });
+  });
+});
+
+describe('/schedules/:scheduleId?edit=1', () => {
+  beforeAll(() => {
+    passportStub.install(app);
+    passportStub.login(user);
+  });
+
+  afterAll(() => {
+    passportStub.logout();
+    passportStub.uninstall();
+  });
+
+  it('update schedule & add candidates', () => {
+    const schedule1 = {
+      scheduleName: 'テストコメント更新予定1',
+      memo: 'テストコメント更新メモ1',
+      candidates: 'テストコメント更新候補1',
+    };
+    const schedule2 = {
+      scheduleName: 'テストコメント更新予定2',
+      memo: 'テストコメント更新メモ2',
+      candidates: 'テストコメント更新候補2',
+    };
+
+    User.upsert({ ...user, userId: user.id })
+      .then(() => request(app).post('/schedules').send(schedule1))
+      .then((res) => {
+        const schedulePath = (res.headers as Record<string, string>).location;
+        const scheduleId = schedulePath?.split('/schedules/')[1];
+        if (typeof scheduleId !== 'string') {
+          console.error(schedulePath);
+          throw new Error('scheduleId is incorrect');
+        }
+        return Promise.all([request(app).post(`/schedules/${scheduleId}?edit=1`).send(schedule2), scheduleId]);
+      })
+      .then(([, scheduleId]) =>
+        Promise.all([
+          Schedule.findByPk(scheduleId),
+          Candidate.findAll({
+            where: { scheduleId },
+            order: [['"candidateId"', 'ASC']],
+          }),
+        ]),
+      )
+      .then(([s, c]) => {
+        if (s == null || c == null) {
+          console.error({ s, c });
+          throw new Error('schedules or candidates are incorrect.');
+        }
+        expect(s.getDataValue('scheduleName')).toBe(schedule2.scheduleName);
+        expect(s.getDataValue('memo')).toBe(schedule2.memo);
+        expect(c.length).toBe(2);
+        expect(c[0].getDataValue('candidateName')).toBe(schedule1.candidates);
+        expect(c[1].getDataValue('candidateName')).toBe(schedule2.candidates);
+        deleteScheduleAggregate(s.getDataValue('scheduleId'));
+      })
+      .catch((err) => {
+        console.error(err);
       });
   });
 });

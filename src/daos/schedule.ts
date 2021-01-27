@@ -9,6 +9,7 @@ export interface IScheduleDao {
   getOne(options: FindOptions<ScheduleAttributes>): Promise<ScheduleAttributes | undefined>;
   getAll(options: FindOptions<ScheduleAttributes>): Promise<ScheduleAttributes[]>;
   add(params: ScheduleCreationAttributes): Promise<ScheduleAttributes>;
+  update(params: ScheduleCreationAttributes): Promise<number>;
 }
 
 class ScheduleDao implements IScheduleDao {
@@ -39,6 +40,24 @@ class ScheduleDao implements IScheduleDao {
       ...params,
     })
       .then((schedule) => schedule.get())
+      .catch((err: Error) => {
+        logger.error(err);
+        throw err;
+      });
+  }
+
+  public update(params: Omit<ScheduleCreationAttributes, 'updatedAt'>): Promise<number> {
+    const updatedAt = new Date();
+    return Schedule.update(
+      {
+        updatedAt,
+        ...params,
+      },
+      {
+        where: { scheduleId: params.scheduleId },
+      },
+    )
+      .then(([rows]) => rows)
       .catch((err: Error) => {
         logger.error(err);
         throw err;

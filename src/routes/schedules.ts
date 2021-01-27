@@ -31,6 +31,10 @@ type CreationBody = {
   candidates: string;
 };
 
+type EditQuery = {
+  edit: string;
+};
+
 type ScheduleDetailParam = {
   scheduleId: string;
 };
@@ -51,7 +55,11 @@ type ScheduleEditRenderOptions = {
 };
 
 const router = Router();
-const { UNAUTHORIZED, NOT_FOUND, INTERNAL_SERVER_ERROR } = httpStatusCodes;
+const { BAD_REQUEST, UNAUTHORIZED, NOT_FOUND, INTERNAL_SERVER_ERROR } = httpStatusCodes;
+
+// ------------------------------ utilities ------------------------------
+
+const sliceScheduleName = (scheduleName: string | undefined | null) => scheduleName?.slice(0, 255) || '(名称未設定)';
 
 const parseCandidateNames = (req: Request<{}, {}, CreationBody>): string[] => {
   return req.body.candidates
@@ -76,6 +84,12 @@ const createCandidatesAndRedirect = (
   });
 };
 
+const isMine = (schedule: ScheduleAttributes, req: Request<any, any, any, any>) => {
+  return req.user != null && schedule.createdBy === parseInt(req.user.id, 10);
+};
+
+// ------------------------------ router ------------------------------
+
 router.get('/new', authEnsurer, (req, res) => {
   res.render('new', {
     user: req.user,
@@ -90,7 +104,7 @@ router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res, next) =>
     return;
   }
   ScheduleDao.add({
-    scheduleName: req.body.scheduleName.slice(0, 255) || '(名称未設定)',
+    scheduleName: sliceScheduleName(req.body.scheduleName),
     memo: req.body.memo,
     createdBy,
   })
@@ -230,8 +244,12 @@ router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleDetailP
     return undefined;
   });
 
-  if (schedule == null || req.user == null || schedule.createdBy !== parseInt(req.user.id, 10)) {
-    next(createErrors(NOT_FOUND, new Error('指定された予定がない、または、予定する権限がありません')));
+  if (schedule == null) {
+    next(createErrors(NOT_FOUND, new Error('指定された予定がありません')));
+    return;
+  }
+  if (!isMine(schedule, req)) {
+    next(createErrors(UNAUTHORIZED, new Error('予定する権限がありません')));
     return;
   }
 
@@ -250,5 +268,53 @@ router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleDetailP
       console.error(err);
     });
 });
+
+router.post(
+  '/:scheduleId',
+  authEnsurer,
+  async (req: Request<ScheduleDetailParam, {}, CreationBody, EditQuery>, res, next) => {
+    const { scheduleId } = req.params;
+    const schedule = await ScheduleDao.getOne({
+      where: { scheduleId },
+    }).catch((err) => {
+      console.error(err);
+      return undefined;
+    });
+
+    if (schedule == null) {
+      next(createErrors(NOT_FOUND, new Error('指定された予定がありません')));
+      return;
+    }
+    if (!isMine(schedule, req)) {
+      next(createErrors(UNAUTHORIZED, new Error('予定する権限がありません')));
+      return;
+    }
+    if (parseInt(req.query.edit, 10) !== 1) {
+      next(createErrors(BAD_REQUEST, '不正なリクエストです。'));
+      return;
+    }
+
+    await ScheduleDao.update({
+      scheduleId,
+      scheduleName: sliceScheduleName(req.body.scheduleName),
+      memo: req.body.memo,
+      createdBy: parseInt(req.user?.id ?? '', 10),
+    }).catch((err: Error) => {
+      logger.error(err);
+      next(createErrors(INTERNAL_SERVER_ERROR));
+    });
+
+    // 追加されてるかチェック
+    const candidateNames = parseCandidateNames(req);
+    if (candidateNames.length > 0) {
+      createCandidatesAndRedirect(candidateNames, schedule.scheduleId, res).catch((err: Error) => {
+        logger.error(err);
+        next(createErrors(INTERNAL_SERVER_ERROR));
+      });
+    } else {
+      res.redirect(`/schedules/${schedule.scheduleId}`);
+    }
+  },
+);
 
 export default router;
