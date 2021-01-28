@@ -251,6 +251,75 @@ describe('/schedules/:scheduleId?edit=1', () => {
   });
 });
 
+describe('/schedules/:scheduleId?delete=1', () => {
+  beforeAll(() => {
+    passportStub.install(app);
+    passportStub.login(user);
+  });
+
+  afterAll(() => {
+    passportStub.logout();
+    passportStub.uninstall();
+  });
+
+  it('delete schedules and their related data', () => {
+    const schedule = {
+      scheduleName: 'テストコメント更新予定1',
+      memo: 'テストコメント更新メモ1',
+      candidates: 'テストコメント更新候補1',
+    };
+    const comment = 'test comment';
+    const availability = 2;
+    return User.upsert({ ...user, userId: user.id })
+      .then(() => request(app).post('/schedules').send(schedule))
+      .then((res) => {
+        const schedulePath = (res.headers as Record<string, string>).location;
+        const scheduleId = schedulePath?.split('/schedules/')[1];
+        if (typeof scheduleId !== 'string') {
+          console.error(schedulePath);
+          throw new Error('scheduleId is incorrect');
+        }
+        return Promise.all([
+          Candidate.findOne({ where: { scheduleId } }),
+          request(app)
+            .post(`/schedules/${scheduleId}/users/${user.id}/comments`)
+            .send({ comment })
+            .expect(`{"status":"OK","comment":"${comment}"}`),
+          scheduleId,
+        ] as const);
+      })
+      .then(([candidate, , scheduleId]) => {
+        if (candidate == null) {
+          throw new Error("couldn't get candidate.");
+        }
+        return Promise.all([
+          request(app)
+            .post(`/schedules/${scheduleId}/users/${user.id}/candidates/${candidate.getDataValue('candidateId')}`)
+            .send({ availability }),
+          scheduleId,
+        ] as const);
+      })
+      .then(([, scheduleId]) => Promise.all([request(app).post(`/schedules/${scheduleId}?delete=1`), scheduleId]))
+      .then(([, scheduleId]) =>
+        Promise.all([
+          Comment.findAll({ where: { scheduleId } }),
+          Availability.findAll({ where: { scheduleId } }),
+          Candidate.findAll({ where: { scheduleId } }),
+          Schedule.findByPk(scheduleId),
+        ] as const),
+      )
+      .then(([comments, availabilities, candidates, foundSchedule]) => {
+        expect(comments.length).toBe(0);
+        expect(availabilities.length).toBe(0);
+        expect(candidates.length).toBe(0);
+        expect(foundSchedule).toBeNull();
+      })
+      .catch((err: Error) => {
+        console.error(err);
+      });
+  });
+});
+
 describe('/schedules/scheduleId/users/:userId/comments', () => {
   beforeAll(() => {
     passportStub.install(app);

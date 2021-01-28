@@ -33,7 +33,8 @@ type CreationBody = {
 };
 
 type EditQuery = {
-  edit: string;
+  edit?: string;
+  delete?: string;
 };
 
 type ScheduleDetailParam = {
