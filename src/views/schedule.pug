@@ -8,6 +8,10 @@ block content
       p(style="white-space:pre;") #{schedule.memo}
     div.card-footer
       p 作成者: #{schedule.user.username}
+  div.my-3
+    label(for="shareUrl") 共有用 URL:
+    - const baseUrl = process.env.HEROKU_URL || 'http://localhost:8000'
+    input(type="text" readonly value=`${baseUrl}/schedules/${schedule.scheduleId}`)#ShareUrl.form-control
   if parseInt(user.id) === schedule.user.userId
     div
       a(href=`/schedules/${schedule.scheduleId}/edit`).btn.btn-primary この予定を編集する
