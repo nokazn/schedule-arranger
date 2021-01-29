@@ -13,6 +13,7 @@ import type {
 } from '~/entities';
 import { ScheduleDao, CandidateDao, AvailabilityDao, CommentDao } from '~/daos';
 import { authEnsurer } from '~/services/auth';
+import csrfProtection from '~/services/csrf';
 import logger from '~/shared/logger';
 import { deleteScheduleAggregate } from '~/routes/utils';
 
@@ -41,6 +42,10 @@ type ScheduleDetailParam = {
   scheduleId: string;
 };
 
+type NewScheduleRenderOptions = {
+  user: Express.User | undefined;
+  csrfToken: string;
+};
 type ScheduleDetailRenderOptions = {
   user: Profile | undefined;
   schedule: ScheduleAttributes;
@@ -54,6 +59,7 @@ type ScheduleEditRenderOptions = {
   user: Profile | undefined;
   schedule: ScheduleAttributes;
   candidates: CandidateAttributes[];
+  csrfToken: string;
 };
 
 const router = Router();
@@ -92,13 +98,14 @@ const isMine = (schedule: ScheduleAttributes, req: Request<any, any, any, any>) 
 
 // ------------------------------ router ------------------------------
 
-router.get('/new', authEnsurer, (req, res) => {
-  res.render('new', {
+router.get('/new', authEnsurer, csrfProtection, (req, res) => {
+  res.render<NewScheduleRenderOptions>('new', {
     user: req.user,
+    csrfToken: req.csrfToken(),
   });
 });
 
-router.post('/', authEnsurer, (req: Request<{}, {}, CreationBody>, res, next) => {
+router.post('/', authEnsurer, csrfProtection, (req: Request<{}, {}, CreationBody>, res, next) => {
   const createdBy = parseInt(req.user?.id ?? '', 10);
   if (req.user == null || Number.isNaN(createdBy)) {
     logger.error(req.user);
@@ -241,7 +248,7 @@ router.get('/:scheduleId', authEnsurer, async (req: Request<ScheduleDetailParam>
   });
 });
 
-router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleDetailParam>, res, next) => {
+router.get('/:scheduleId/edit', authEnsurer, csrfProtection, async (req: Request<ScheduleDetailParam>, res, next) => {
   const schedule = await ScheduleDao.getOne({
     where: { scheduleId: req.params.scheduleId },
   }).catch((err: Error) => {
@@ -267,6 +274,7 @@ router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleDetailP
         user: req.user,
         schedule,
         candidates,
+        csrfToken: req.csrfToken(),
       });
     })
     .catch((err) => {
@@ -277,6 +285,7 @@ router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleDetailP
 router.post(
   '/:scheduleId',
   authEnsurer,
+  csrfProtection,
   async (req: Request<ScheduleDetailParam, {}, CreationBody, EditQuery>, res, next) => {
     const { scheduleId } = req.params;
     const schedule = await ScheduleDao.getOne({
