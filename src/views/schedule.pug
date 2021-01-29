@@ -1,14 +1,18 @@
 extends layout
 
 block content
-  h4 #{schedule.scheduleName}
-  p(style="white-space:pre;") #{schedule.memo}
-  p 作成者: #{schedule.user.username}
+  div.card.my-3
+    div.card-header
+      h4 #{schedule.scheduleName}
+    div.card-body
+      p(style="white-space:pre;") #{schedule.memo}
+    div.card-footer
+      p 作成者: #{schedule.user.username}
   if parseInt(user.id) === schedule.user.userId
     div
-      a(href=`/schedules/${schedule.scheduleId}/edit`) この予定を編集する
-  h3 出欠表
-  table
+      a(href=`/schedules/${schedule.scheduleId}/edit`).btn.btn-primary この予定を編集する
+  h3.my-3 出欠表
+  table.table.table-bordered
     tr
       th 予定
       each user in users
@@ -18,29 +22,34 @@ block content
         th #{candidate.candidateName}
         each user in users
           - const availability = availabilityMapMap.get(user.userId).get(candidate.candidateId);
-          - const availabilityLabels = ['欠', '?', '出'];
+          - const availabilityLabels = ['欠', '？', '出'];
+          - const buttonStyles = ['danger', 'secondary', 'success'];
           td
             if user.isSelf
               button(
+                class=`availability-toggle-button btn btn-${buttonStyles[availability]}`
                 data-schedule-id=schedule.scheduleId
                 data-user-id=user.userId
                 data-candidate-id=candidate.candidateId
                 data-availability=availability
-              ).availability-toggle-button #{availabilityLabels[availability]}
+              ) #{availabilityLabels[availability]}
             else
-              p #{availabilityLabels[availability]}
+              h3 #{availabilityLabels[availability]}
     tr
+      //- TODO: コメント新規追加されたとき即座表示
       th コメント
       each user in users
         if user.isSelf
           td
             if commentMap.get(user.userId) != null
-              p#self-comment #{commentMap.get(user.userId).comment}
+              p
+                small#self-comment #{commentMap.get(user.userId).comment}
             button(
               data-schedule-id=schedule.scheduleId
               data-user-id=user.userId
-            )#self-comment-button 編集
+            )#self-comment-button.btn-sm.btn-primary 編集
         else
           td
             if commentMap.get(user.userId) != null
-              p #{commentMap.get(user.userId).comment}
+              p
+                small #{commentMap.get(user.userId).comment}

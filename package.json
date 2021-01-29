@@ -21,6 +21,7 @@
     "~": "dist"
   },
   "dependencies": {
+    "bootstrap": "^4.6.0",
     "command-line-args": "^5.1.1",
     "cookie-parser": "^1.4.5",
     "dotenv": "^8.2.0",
@@ -39,6 +40,7 @@
     "passport-github2": "^0.1.12",
     "pg": "^8.5.1",
     "pg-hstore": "^2.3.3",
+    "popper.js": "^1.16.1",
     "pug": "^3.0.0",
     "sequelize": "^6.3.5",
     "uuid": "^8.3.2"
@@ -46,6 +48,7 @@
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@babel/preset-env": "^7.12.11",
+    "@types/bootstrap": "^5.0.5",
     "@types/command-line-args": "^5.0.0",
     "@types/cookie-parser": "^1.4.2",
     "@types/express": "^4.17.9",

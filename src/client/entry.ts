@@ -17,8 +17,12 @@ $('.availability-toggle-button').each((i, e) => {
       },
       (data: AvailabilityAttributes) => {
         button.data('availability', data.availability);
-        const availabilityLabels = ['欠', '?', '出'];
+        const availabilityLabels = ['欠', '？', '出'];
         button.text(availabilityLabels[data.availability]);
+
+        const buttonStyles = ['danger', 'secondary', 'success'];
+        button.removeClass(buttonStyles.map((b) => `btn-${b}`).join(' '));
+        button.addClass(`btn-${buttonStyles[data.availability]}`);
       },
     ).catch((err) => {
       console.error(err);

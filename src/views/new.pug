@@ -1,12 +1,17 @@
+extends layout
+
 block content
+  h3.my-3 予定の作成
   form(method="post", action="/schedules")
-    div
-      h5 予定名
-      input(type="text" name="scheduleName")
-    div
-      h5 メモ
-      textarea(name="memo")
-    div
-      h5 候補日程 (改行して複数入力してください)
-      textarea(name="candidates")
-    button(type="submit") 予定をつくる
+    div.mb-3
+      label(for="scheduleName") 予定名
+      input(type="text" name="scheduleName")#scheduleName.form-control
+    div.mb-3
+      label(for="memo") メモ
+      textarea(name="memo")#memo.form-control
+    div.mb-3
+      label(for="candidates") 候補日程 (改行して複数入力してください)
+      textarea(name="candidates" rows="4")#candidates.form-control
+    div.d-flex.justify-content-end
+      a(href="/").btn.btn-outline-secondary.me-3 戻る
+      button(type="submit").btn.btn-primary 予定をつくる
