@@ -56,7 +56,7 @@ const authEnsurer: RequestHandler = (req, res, next) => {
     next();
     return;
   }
-  res.redirect('/login');
+  res.redirect(`/login?from=${req.originalUrl}`);
 };
 
 export { passport, githubAuthenticator, authEnsurer };
