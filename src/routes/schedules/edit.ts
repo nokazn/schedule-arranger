@@ -5,7 +5,7 @@ import type { Profile } from 'passport';
 
 import { ScheduleDao, CandidateDao } from '~/daos';
 import { authEnsurer } from '~/services/auth';
-// import csrfProtection from '~/services/csrf';
+import csrfProtection from '~/services/csrf';
 import { deleteScheduleAggregate } from '~/routes/utils';
 import logger from '~/shared/logger';
 import { ScheduleIdParam, isMine, sliceScheduleName, parseCandidateNames, createCandidatesAndRedirect } from './index';
@@ -32,8 +32,7 @@ type RenderOptions = {
 const router = Router();
 const { BAD_REQUEST, UNAUTHORIZED, NOT_FOUND, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 
-router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleIdParam>, res, next) => {
-  // router.get('/:scheduleId/edit', authEnsurer, csrfProtection, async (req: Request<ScheduleIdParam>, res, next) => {
+router.get('/:scheduleId/edit', authEnsurer, csrfProtection, async (req: Request<ScheduleIdParam>, res, next) => {
   const schedule = await ScheduleDao.getOne({
     where: { scheduleId: req.params.scheduleId },
   }).catch((err: Error) => {
@@ -55,7 +54,6 @@ router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleIdParam
     order: [['"candidateId', 'ASC']],
   })
     .then((candidates) => {
-      console.info({ csrf: req.csrfToken() });
       res.render<RenderOptions>('edit', {
         user: req.user,
         schedule,
@@ -71,7 +69,7 @@ router.get('/:scheduleId/edit', authEnsurer, async (req: Request<ScheduleIdParam
 router.post(
   '/:scheduleId',
   authEnsurer,
-  // csrfProtection,
+  csrfProtection,
   async (req: Request<ScheduleIdParam, {}, Body, Query>, res, next) => {
     const { scheduleId } = req.params;
     const schedule = await ScheduleDao.getOne({

@@ -1,6 +1,8 @@
+/* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/no-floating-promises */
-import request from 'supertest';
+import request from 'supertest-session';
 import passportStub from 'passport-stub';
+import { JSDOM } from 'jsdom';
 
 import app from '~/server';
 import { db } from '~/infrastructure/db';
@@ -13,6 +15,21 @@ const user = {
   username: 'test-user',
   displayName: 'test-user',
   profileUrl: 'path/to/test-user',
+};
+
+const getCsrfToken = async (path: string = '/schedules/new'): Promise<[string | undefined, string[]]> => {
+  const res = await request(app)
+    .get(path)
+    .catch((err) => {
+      console.error(err);
+      return undefined;
+    });
+  if (res == null) {
+    return [undefined, []];
+  }
+  const input = new JSDOM(res.text).window.document.getElementsByName('_csrf')[0] as HTMLInputElement | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  return [input?.value, res.headers['set-cookie'] as string[]];
 };
 
 afterAll(async () => {
@@ -65,14 +82,20 @@ describe('/schedules', () => {
   });
 
   it('create a schedule and then show it', async (done) => {
+    const schedule = {
+      scheduleName: 'schedule1',
+      memo: 'memomemo\nmemomemo',
+      candidates: 'candidate1\ncandidate2\ncandidate3\n\n',
+    };
+    const [_csrf, cookies] = await getCsrfToken();
     const res = await UserDao.upsert({ ...user, userId: user.id })
       .then(() => {
         return request(app)
           .post('/schedules')
+          .set('Cookie', cookies)
           .send({
-            scheduleName: 'schedule1',
-            memo: 'memomemo\nmemomemo',
-            candidates: 'candidate1\ncandidate2\ncandidate3\n\n',
+            ...schedule,
+            _csrf,
           })
           .expect('Location', /schedules/)
           .expect(302);
@@ -121,15 +144,24 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
     passportStub.uninstall();
   });
 
-  it('update availabilities', () => {
+  it('update availabilities', async () => {
     const schedule = {
       scheduleName: 'テスト出欠更新予定1',
       memo: 'テスト出欠更新メモ1',
       candidates: 'テスト出欠更新候補1',
     };
     const availability = 2;
+    const [_csrf, cookies] = await getCsrfToken();
     return User.upsert({ ...user, userId: user.id })
-      .then(() => request(app).post('/schedules').send(schedule))
+      .then(() =>
+        request(app)
+          .post('/schedules')
+          .set('Cookie', cookies)
+          .send({
+            ...schedule,
+            _csrf,
+          }),
+      )
       .then((res) => {
         const schedulePath = (res.headers as Record<string, string>).location;
         const scheduleId = schedulePath?.split('/schedules/')[1];
@@ -139,7 +171,7 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
         }
         return Promise.all([Candidate.findOne({ where: { scheduleId } }), scheduleId] as const);
       })
-      .then(([candidate, scheduleId]) => {
+      .then(async ([candidate, scheduleId]) => {
         const candidateId = candidate?.getDataValue('candidateId');
         if (candidateId == null) {
           throw new Error('candidate has failed to be found.');
@@ -153,7 +185,11 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
         return Promise.all([
           request(app)
             .post(`/schedules/${scheduleId}/users/${user.id}/candidates/${candidateId}`)
-            .send({ availability }) // 出席
+            .set('Cookie', cookies)
+            .send({
+              availability, // 出席
+              _csrf,
+            })
             .expect('{"status":"OK","availability":2}'),
           availabilityParams,
         ] as const);
@@ -201,7 +237,7 @@ describe('/schedules/:scheduleId?edit=1', () => {
     passportStub.uninstall();
   });
 
-  it('update schedule & add candidates', () => {
+  it('update schedule & add candidates', async () => {
     const schedule1 = {
       scheduleName: 'テストコメント更新予定1',
       memo: 'テストコメント更新メモ1',
@@ -213,8 +249,17 @@ describe('/schedules/:scheduleId?edit=1', () => {
       candidates: 'テストコメント更新候補2',
     };
 
+    const [_csrf, cookies] = await getCsrfToken();
     User.upsert({ ...user, userId: user.id })
-      .then(() => request(app).post('/schedules').send(schedule1))
+      .then(() =>
+        request(app)
+          .post('/schedules')
+          .set('Cookie', cookies)
+          .send({
+            ...schedule1,
+            _csrf,
+          }),
+      )
       .then((res) => {
         const schedulePath = (res.headers as Record<string, string>).location;
         const scheduleId = schedulePath?.split('/schedules/')[1];
@@ -222,7 +267,16 @@ describe('/schedules/:scheduleId?edit=1', () => {
           console.error(schedulePath);
           throw new Error('scheduleId is incorrect');
         }
-        return Promise.all([request(app).post(`/schedules/${scheduleId}?edit=1`).send(schedule2), scheduleId]);
+        return Promise.all([
+          request(app)
+            .post(`/schedules/${scheduleId}?edit=1`)
+            .set('Cookie', cookies)
+            .send({
+              ...schedule2,
+              _csrf,
+            }),
+          scheduleId,
+        ]);
       })
       .then(([, scheduleId]) =>
         Promise.all([
@@ -262,7 +316,7 @@ describe('/schedules/:scheduleId?delete=1', () => {
     passportStub.uninstall();
   });
 
-  it('delete schedules and their related data', () => {
+  it('delete schedules and their related data', async () => {
     const schedule = {
       scheduleName: 'テストコメント更新予定1',
       memo: 'テストコメント更新メモ1',
@@ -270,8 +324,17 @@ describe('/schedules/:scheduleId?delete=1', () => {
     };
     const comment = 'test comment';
     const availability = 2;
+    const [_csrf, cookies] = await getCsrfToken();
     return User.upsert({ ...user, userId: user.id })
-      .then(() => request(app).post('/schedules').send(schedule))
+      .then(() =>
+        request(app)
+          .post('/schedules')
+          .set('Cookie', cookies)
+          .send({
+            ...schedule,
+            _csrf,
+          }),
+      )
       .then((res) => {
         const schedulePath = (res.headers as Record<string, string>).location;
         const scheduleId = schedulePath?.split('/schedules/')[1];
@@ -283,7 +346,11 @@ describe('/schedules/:scheduleId?delete=1', () => {
           Candidate.findOne({ where: { scheduleId } }),
           request(app)
             .post(`/schedules/${scheduleId}/users/${user.id}/comments`)
-            .send({ comment })
+            .set('Cookie', cookies)
+            .send({
+              comment,
+              _csrf,
+            })
             .expect(`{"status":"OK","comment":"${comment}"}`),
           scheduleId,
         ] as const);
@@ -295,11 +362,22 @@ describe('/schedules/:scheduleId?delete=1', () => {
         return Promise.all([
           request(app)
             .post(`/schedules/${scheduleId}/users/${user.id}/candidates/${candidate.getDataValue('candidateId')}`)
-            .send({ availability }),
+            .set('Cookie', cookies)
+            .send({
+              availability,
+              _csrf,
+            }),
           scheduleId,
         ] as const);
       })
-      .then(([, scheduleId]) => Promise.all([request(app).post(`/schedules/${scheduleId}?delete=1`), scheduleId]))
+      .then(([, scheduleId]) =>
+        Promise.all([
+          request(app).post(`/schedules/${scheduleId}?delete=1`).set('Cookie', cookies).send({
+            _csrf,
+          }),
+          scheduleId,
+        ]),
+      )
       .then(([, scheduleId]) =>
         Promise.all([
           Comment.findAll({ where: { scheduleId } }),
@@ -331,15 +409,24 @@ describe('/schedules/scheduleId/users/:userId/comments', () => {
     passportStub.uninstall();
   });
 
-  it('update comments', () => {
+  it('update comments', async () => {
     const schedule = {
       scheduleName: 'テストコメント更新予定1',
       memo: 'テストコメント更新メモ1',
       candidates: 'テストコメント更新候補1',
     };
     const comment = 'test comment';
+    const [_csrf, cookies] = await getCsrfToken();
     return User.upsert({ ...user, userId: user.id })
-      .then(() => request(app).post('/schedules').send(schedule))
+      .then(() =>
+        request(app)
+          .post('/schedules')
+          .set('Cookie', cookies)
+          .send({
+            ...schedule,
+            _csrf,
+          }),
+      )
       .then((res) => {
         const schedulePath = (res.headers as Record<string, string>).location;
         const scheduleId = schedulePath?.split('/schedules/')[1];
@@ -350,7 +437,11 @@ describe('/schedules/scheduleId/users/:userId/comments', () => {
         return Promise.all([
           request(app)
             .post(`/schedules/${scheduleId}/users/${user.id}/comments`)
-            .send({ comment })
+            .set('Cookie', cookies)
+            .send({
+              comment,
+              _csrf,
+            })
             .expect(`{"status":"OK","comment":"${comment}"}`),
           scheduleId,
         ] as const);

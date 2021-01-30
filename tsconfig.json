@@ -56,6 +56,9 @@
       ],
       "passport-stub": [
         "src/@types/passport-stub.d.ts"
+      ],
+      "supertest-session": [
+        "src/@types/supertest-session.d.ts"
       ]
     },
   },
