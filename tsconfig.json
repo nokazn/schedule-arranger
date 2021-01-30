@@ -62,6 +62,7 @@
   "include": [
     "src/**/*.ts",
     "tests/**/*.ts",
+    "./build.ts",
     // ESLint で @typescript-eslint/parser が認識できるように
     "**/jest.*.js",
     "./.eslintrc.js"
@@ -69,5 +70,7 @@
   "exclude": [
     "src/public/",
     "**/node_modules",
+    "dist/**",
+    "coverage/**",
   ]
 }

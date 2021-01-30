@@ -4,7 +4,8 @@
  */
 
 import path from 'path';
-import dotenv from 'dotenv';
+import fs from 'fs-extra';
+import dotenv, { DotenvConfigOutput } from 'dotenv';
 import commandLineArgs from 'command-line-args';
 import logger from '~/shared/logger';
 
@@ -26,17 +27,19 @@ const checkEnv = (...candidates: string[][]) => {
     },
   ]);
   const envType = (options.env as string | undefined) ?? 'development';
-  const result = dotenv.config({
-    path: path.join(__dirname, `env/.env.${envType}`),
-  });
-  if (result.error) {
-    throw result.error;
+  const p = path.join(__dirname, `env/.env.${envType}`);
+  let result: DotenvConfigOutput | undefined;
+  if (fs.existsSync(p)) {
+    result = dotenv.config({ path: p });
+    if (result.error) {
+      throw result.error;
+    }
   }
 
   const isValid1 = checkEnv(['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'SESSION_SECRET']);
-  const isValid2 = checkEnv(['DATABASE_URL', 'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT'], ['DB_DATABASE']);
+  const isValid2 = checkEnv(['DB_DATABASE', 'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT'], ['DATABASE_URL']);
   if (!isValid1 || !isValid2) {
-    logger.error(result, result.parsed);
+    logger.error({ result });
     throw new Error('Environmental variables are not set correctly.');
   }
 })();

@@ -8,6 +8,7 @@ import childProcess from 'child_process';
 
 // Setup logger
 const logger = log4js.getLogger();
+logger.level = 'debug';
 
 (async () => {
   try {
@@ -28,15 +29,19 @@ const logger = log4js.getLogger();
 function remove(loc: string): Promise<void> {
   return new Promise((res, rej) => {
     return fs.remove(loc, (err) => {
-      return !!err ? rej(err) : res();
+      return err != null ? rej(err) : res();
     });
   });
 }
 
 function copy(src: string, dest: string): Promise<void> {
   return new Promise((res, rej) => {
+    if (!fs.existsSync(src)) {
+      logger.warn(`source file (${src}) doesn\'t exist.`);
+      return res();
+    }
     return fs.copy(src, dest, (err) => {
-      return !!err ? rej(err) : res();
+      return err != null ? rej(err) : res();
     });
   });
 }

@@ -1,11 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "sourceMap": false
+    "sourceMap": false,
+    "rootDir": "./src",
   },
+  "include": [
+    "src/**/*.ts",
+  ],
   "exclude": [
     "tests",
-    "src/**/*.mock.ts",
+    "**/*.mock.ts",
     "src/public/"
   ]
 }
