@@ -6,6 +6,7 @@ import type { Profile } from 'passport';
 import { User } from '~/entities';
 import { ScheduleDao, CandidateDao, AvailabilityDao, CommentDao } from '~/daos';
 import { authEnsurer } from '~/services/auth';
+import csrfProtection from '~/services/csrf';
 import logger from '~/shared/logger';
 import type {
   UserAttributes,
@@ -28,6 +29,7 @@ type AvailabilityMap = Map<CandidateId, Availability>;
 
 type RenderOptions = {
   user: Profile | undefined;
+  csrfToken: string;
   schedule: ScheduleAttributes;
   candidates: CandidateAttributes[];
   users: UserInAvailabilities[];
@@ -38,7 +40,7 @@ type RenderOptions = {
 const router = Router();
 const { UNAUTHORIZED, NOT_FOUND, INTERNAL_SERVER_ERROR } = httpStatusCodes;
 
-router.get('/:scheduleId', authEnsurer, async (req: Request<ScheduleIdParam>, res: Response, next) => {
+router.get('/:scheduleId', authEnsurer, csrfProtection, async (req: Request<ScheduleIdParam>, res: Response, next) => {
   if (req.user == null) {
     next(createErrors(UNAUTHORIZED));
     return;
@@ -148,6 +150,7 @@ router.get('/:scheduleId', authEnsurer, async (req: Request<ScheduleIdParam>, re
 
   res.render<RenderOptions>('schedule', {
     user: req.user,
+    csrfToken: req.csrfToken(),
     schedule,
     candidates,
     users,

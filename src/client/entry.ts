@@ -37,10 +37,12 @@ buttonSelfComment.on('click', () => {
   const userId = parseInt(buttonSelfComment.data('user-id') as string, 10);
   const comment = prompt('コメント255文字以内で入力してください。');
   if (comment) {
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? undefined;
     $.post(
       `/schedules/${scheduleId}/users/${userId}/comments`,
       {
         comment,
+        _csrf: token,
       },
       (data: CommentAttributes) => $('#self-comment').text(data.comment),
     ).catch((err) => {
