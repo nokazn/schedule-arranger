@@ -17,7 +17,7 @@
     "build": "webpack && ts-node build.ts",
     "dev": "webpack & ts-node -r tsconfig-paths/register --files src/index.ts",
     "dev:watch": "webpack watch & ts-node-dev -r tsconfig-paths/register --respawn --files src/index.ts",
-    "start": "yarn build && node -r module-alias/register ./dist/index.js --env production",
+    "start": "node -r module-alias/register ./dist/index.js --env production",
     "test": "jest"
   },
   "_moduleAliases": {
