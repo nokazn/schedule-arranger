@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "license": "MIT",
   "private": true,
+  "engines": {
+    "node": "~12"
+  },
   "scripts": {
     "format": "prettier --ignore-path ./.prettierignore --write ./**/*.{j,t}s{,x}",
     "lint": "eslint . --ext .ts,.js",
