@@ -1,6 +1,6 @@
-import './pre-start'; // Must be the first import
-import app from '~/server';
+import './pre-start';
 
+import app from '~/server';
 import logger from '~/shared/logger';
 import { PORT } from '~/shared/constants';
 
