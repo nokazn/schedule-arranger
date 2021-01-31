@@ -34,6 +34,8 @@ const checkEnv = (...candidates: string[][]) => {
     if (result.error) {
       throw result.error;
     }
+  } else if (envType === 'development') {
+    console.warn(`.env file doesn't exist at '{p}'.`);
   }
 
   const isValid1 = checkEnv(['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'SESSION_SECRET']);

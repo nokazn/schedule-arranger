@@ -3,5 +3,6 @@ dist/*
 src/public/js/*.js
 *.log
 **/.env*
+!**/.env.sample
 !**/.env.*.sample
 coverage
