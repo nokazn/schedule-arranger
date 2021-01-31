@@ -20,7 +20,7 @@ logger.level = 'debug';
     // Copy production env file
     await copy('./src/pre-start/env/.env.production', './dist/pre-start/env/.env.production');
     // Copy back-end files
-    await exec('tsc --build tsconfig.prod.json', './');
+    await exec('tsc --build tsconfig.build.json', './');
   } catch (err) {
     logger.error(err);
   }

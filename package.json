@@ -14,7 +14,7 @@
     "build:client": "webpack",
     "build:client:watch": "webpack watch",
     "build:server": "ts-node --project tsconfig.json build.ts",
-    "build": "webpack && ts-node build.ts",
+    "build": "webpack && ts-node --project tsconfig.json build.ts",
     "dev": "webpack & ts-node -r tsconfig-paths/register --files src/index.ts",
     "dev:watch": "webpack watch & ts-node-dev -r tsconfig-paths/register --respawn --files src/index.ts",
     "start": "node -r module-alias/register ./dist/index.js --env production",
