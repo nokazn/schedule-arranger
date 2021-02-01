@@ -24,10 +24,25 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up docker-compose
-      run: docker-compose up -d
-    - name: Run test
-      run: docker exec web yarn test
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          yarn --frozen-lockfile --production=false
+      - name: Set up docker-compose
+        run: |
+          USER_ID=$(id -u) GROUP_ID=$(id -g) docker-compose up -d
+      - name: Run test
+        run: |
+          docker-compose exec -T web yarn test

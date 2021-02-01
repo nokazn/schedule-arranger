@@ -6,3 +6,4 @@ src/public/js/*.js
 !**/.env.sample
 !**/.env.*.sample
 coverage
+data/

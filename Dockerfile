@@ -2,12 +2,10 @@ FROM node:12-alpine
 
 ENV PROJECT_ROOTDIR="/app/" NODE_ENV="production" NPM_CONFIG_PRODUCTION=false YARN_PRODUCTION=false
 
-WORKDIR ${PROJECT_ROOTDIR}
+WORKDIR /app/
 
-COPY package.json yarn.lock ${PROJECT_ROOTDIR}
+COPY . /app/
 
-RUN apk add python make g++ && yarn
-
-COPY . ${PROJECT_ROOTDIR}
+RUN yarn --frozen-lockfile --production=false
 
 EXPOSE 3000

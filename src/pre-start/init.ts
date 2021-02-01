@@ -35,13 +35,18 @@ const checkEnv = (...candidates: string[][]) => {
       throw result.error;
     }
   } else if (envType === 'development') {
-    console.warn(`.env file doesn't exist at '{p}'.`);
+    logger.warn(`.env file doesn't exist at '${p}'.`);
   }
 
   const isValid1 = checkEnv(['GH_CLIENT_ID', 'GH_CLIENT_SECRET', 'SESSION_SECRET']);
   const isValid2 = checkEnv(['DB_DATABASE', 'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT'], ['DATABASE_URL']);
   if (!isValid1 || !isValid2) {
-    logger.error({ result });
+    logger.error({
+      result,
+      isValid1,
+      isValid2,
+      env: process.env,
+    });
     throw new Error('Environmental variables are not set correctly.');
   }
 })();
