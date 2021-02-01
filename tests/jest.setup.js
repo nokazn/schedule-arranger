@@ -1,1 +1,1 @@
-require('~/pre-start');
+require('~/pre-start/init');
