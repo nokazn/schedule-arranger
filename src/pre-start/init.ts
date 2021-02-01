@@ -38,7 +38,7 @@ const checkEnv = (...candidates: string[][]) => {
     console.warn(`.env file doesn't exist at '{p}'.`);
   }
 
-  const isValid1 = checkEnv(['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'SESSION_SECRET']);
+  const isValid1 = checkEnv(['GH_CLIENT_ID', 'GH_CLIENT_SECRET', 'SESSION_SECRET']);
   const isValid2 = checkEnv(['DB_DATABASE', 'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT'], ['DATABASE_URL']);
   if (!isValid1 || !isValid2) {
     logger.error({ result });

@@ -9,8 +9,8 @@ on:
 env:
   PORT: 3000
   BASE_URL: http://localhost
-  GITHUB_CLIENT_ID: ${{ secrets.GITHUB_CLIENT_ID }}
-  GITHUB_CLIENT_SECRET: ${{ secrets.GITHUB_CLIENT_SECRET }}
+  GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+  GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
   SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
   DB_USER: ${{ secrets.DB_USER }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -30,4 +30,4 @@ jobs:
     - name: Set up docker-compose
       run: docker-compose up -d
     - name: Run test
-      run: docker exec -it web yarn test
+      run: docker exec web yarn test

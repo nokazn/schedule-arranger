@@ -6,7 +6,7 @@ import type { RequestHandler } from 'express';
 
 import { UserDao } from '~/daos';
 import logger from '~/shared/logger';
-import { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, BASE_URL, PORT } from '~/shared/constants';
+import { GH_CLIENT_ID, GH_CLIENT_SECRET, BASE_URL, PORT } from '~/shared/constants';
 
 passport.serializeUser((user, done) => {
   done(null, user);
@@ -19,8 +19,8 @@ passport.deserializeUser((obj: Express.User, done) => {
 passport.use(
   new GithubStrategy(
     {
-      clientID: GITHUB_CLIENT_ID,
-      clientSecret: GITHUB_CLIENT_SECRET,
+      clientID: GH_CLIENT_ID,
+      clientSecret: GH_CLIENT_SECRET,
       callbackURL: `${BASE_URL}:${PORT}/auth/github/callback`,
     },
     (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {

@@ -1,6 +1,6 @@
 const ENV = process.env as Record<string, string>;
 
-export const { GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, SESSION_SECRET } = ENV;
+export const { GH_CLIENT_ID, GH_CLIENT_SECRET, SESSION_SECRET } = ENV;
 export const PORT = parseInt(ENV.PORT, 10) || 3000;
 export const BASE_URL = ENV.BASE_URL || 'http://localhost';
 
