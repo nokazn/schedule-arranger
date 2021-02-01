@@ -9,5 +9,5 @@ module.exports = {
   },
   // collectCoverage: true,
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
-  testTimeout: 15000,
+  testTimeout: 30000,
 };

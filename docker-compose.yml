@@ -6,14 +6,13 @@ services:
     container_name: db
     ports:
       - 5432:5432
-    env_file:
-      - ./src/pre-start/env/.env.development
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_DB
     volumes:
       - ./data:/var/lib/postgresql/data
+
   web:
     image: alpine-node:12
     container_name: web
