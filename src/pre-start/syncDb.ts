@@ -1,7 +1,7 @@
 import { User, Schedule, Availability, Candidate, Comment } from '~/entities';
 import logger from '~/shared/logger';
 
-(async () => {
+export const syncDb = async () => {
   await User.sync()
     .then(() => {
       Schedule.belongsTo(User, {
@@ -18,7 +18,12 @@ import logger from '~/shared/logger';
         foreignKey: 'candidateId',
       });
       return Availability.sync();
+    })
+    .catch((err: Error) => {
+      logger.error(err);
     });
-})().catch((err) => {
+};
+
+(async () => syncDb())().catch((err) => {
   logger.error(err);
 });

@@ -5,6 +5,7 @@ import passportStub from 'passport-stub';
 import { JSDOM } from 'jsdom';
 
 import app from '~/server';
+import { syncDb } from '~/pre-start/syncDb';
 import { db } from '~/infrastructure/db';
 import { Candidate, User, Availability, Comment, AvailabilityAttributes, Schedule } from '~/entities';
 import { UserDao } from '~/daos';
@@ -20,7 +21,7 @@ const user = {
 const getCsrfToken = async (path: string = '/schedules/new'): Promise<[string | undefined, string[]]> => {
   const res = await request(app)
     .get(path)
-    .catch((err) => {
+    .catch((err: Error) => {
       console.error(err);
       return undefined;
     });
@@ -31,6 +32,10 @@ const getCsrfToken = async (path: string = '/schedules/new'): Promise<[string | 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   return [input?.value, res.headers['set-cookie'] as string[]];
 };
+
+beforeAll(async () => {
+  await syncDb();
+});
 
 afterAll(async () => {
   // これがないと connection を張ったままになってしまい、テストが exit しない
@@ -100,7 +105,7 @@ describe('/schedules', () => {
           .expect('Location', /schedules/)
           .expect(302);
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error(err);
         return undefined;
       });
@@ -127,8 +132,9 @@ describe('/schedules', () => {
         }
         return deleteScheduleAggregate(scheduleId, done);
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error(err);
+        throw err;
       });
   });
 });
@@ -221,7 +227,7 @@ describe('/schedules/:scheduleId/users/:userId/candidates/:candidateId', () => {
       .then((scheduleId) => deleteScheduleAggregate(scheduleId))
       .catch((err: Error) => {
         console.error(err);
-        // done();
+        throw err;
       });
   });
 });
@@ -299,8 +305,9 @@ describe('/schedules/:scheduleId?edit=1', () => {
         expect(c[1].getDataValue('candidateName')).toBe(schedule2.candidates);
         deleteScheduleAggregate(s.getDataValue('scheduleId'));
       })
-      .catch((err) => {
+      .catch((err: Error) => {
         console.error(err);
+        throw err;
       });
   });
 });
@@ -394,6 +401,7 @@ describe('/schedules/:scheduleId?delete=1', () => {
       })
       .catch((err: Error) => {
         console.error(err);
+        throw err;
       });
   });
 });
@@ -454,6 +462,7 @@ describe('/schedules/scheduleId/users/:userId/comments', () => {
       })
       .catch((err: Error) => {
         console.error(err);
+        throw err;
       });
   });
 });
