@@ -22,21 +22,11 @@ env:
   POSTGRES_DB: ${{ secrets.DB_DATABASE }}
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
-
-    # strategy:
-    #   matrix:
-    #     node-version: [12.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
     - uses: actions/checkout@v2
-    # - name: Use Node.js ${{ matrix.node-version }}
-    #   uses: actions/setup-node@v1
-    #   with:
-    #     node-version: ${{ matrix.node-version }}
     - name: Set up docker-compose
       run: docker-compose up -d
     - name: Run test
